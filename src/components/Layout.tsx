@@ -30,16 +30,17 @@ export default function Layout() {
   }
 
   const isPatientArea = location.pathname.startsWith('/paciente')
+  const isClinicArea = location.pathname.startsWith('/clinica')
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
       <div className="h-14 border-b bg-muted/20 px-6 flex items-center justify-center sm:justify-between shrink-0 z-50">
-        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50">
+        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50 overflow-x-auto">
           <Link
             to="/"
             className={cn(
-              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
-              !isPatientArea
+              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
+              !isPatientArea && !isClinicArea
                 ? 'bg-background shadow-sm text-foreground'
                 : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
             )}
@@ -49,7 +50,7 @@ export default function Layout() {
           <Link
             to="/paciente"
             className={cn(
-              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
+              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
               isPatientArea
                 ? 'bg-background shadow-sm text-foreground'
                 : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
@@ -57,12 +58,23 @@ export default function Layout() {
           >
             Área do Paciente
           </Link>
+          <Link
+            to="/clinica"
+            className={cn(
+              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
+              isClinicArea
+                ? 'bg-background shadow-sm text-foreground'
+                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+            )}
+          >
+            Área da Clínica
+          </Link>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden relative">
         <SidebarProvider className="min-h-0 h-full">
-          <AppSidebar isPatientArea={isPatientArea} />
+          <AppSidebar isPatientArea={isPatientArea} isClinicArea={isClinicArea} />
           <SidebarInset className="overflow-hidden flex flex-col">
             <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 backdrop-blur px-6 sticky top-0 z-10">
               <SidebarTrigger className="-ml-2" />

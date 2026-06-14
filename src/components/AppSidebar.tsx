@@ -19,6 +19,7 @@ import {
   LogOut,
   BookHeart,
   Wallet,
+  Settings,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -40,36 +41,63 @@ const psychNavItems = [
   { title: 'Sessões Online', path: '/sessoes-online', icon: Video },
 ]
 
-export function AppSidebar({ isPatientArea }: { isPatientArea?: boolean }) {
+const clinicNavItems = [
+  { title: 'Dashboard', path: '/clinica', icon: LayoutDashboard },
+  { title: 'Psicólogos', path: '/clinica/psicologos', icon: UserCircle },
+  { title: 'Agenda da Clínica', path: '/clinica/agenda', icon: CalendarDays },
+  { title: 'Financeiro', path: '/clinica/financeiro', icon: Wallet },
+  { title: 'Relatórios', path: '/clinica/relatorios', icon: FileText },
+  { title: 'Configurações', path: '/clinica/configuracoes', icon: Settings },
+]
+
+export function AppSidebar({
+  isPatientArea,
+  isClinicArea,
+}: {
+  isPatientArea?: boolean
+  isClinicArea?: boolean
+}) {
   const location = useLocation()
   const { signOut } = useAuth()
   const { state } = useSidebar()
 
-  const navItems = isPatientArea ? patientNavItems : psychNavItems
+  const navItems = isClinicArea ? clinicNavItems : isPatientArea ? patientNavItems : psychNavItems
 
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader
-        className={`h-16 flex items-center px-4 border-b transition-colors ${isPatientArea ? 'bg-sky-50/30' : 'bg-slate-50/30'}`}
+        className={`h-16 flex items-center px-4 border-b transition-colors ${
+          isClinicArea ? 'bg-indigo-50/30' : isPatientArea ? 'bg-sky-50/30' : 'bg-slate-50/30'
+        }`}
       >
         {state === 'expanded' ? (
           <div
-            className={`font-semibold text-lg flex items-center gap-2 ${isPatientArea ? 'text-sky-600' : 'text-slate-700'}`}
+            className={`font-semibold text-lg flex items-center gap-2 ${
+              isClinicArea ? 'text-indigo-600' : isPatientArea ? 'text-sky-600' : 'text-slate-700'
+            }`}
           >
             <div
-              className={`w-8 h-8 rounded-md text-white flex items-center justify-center ${isPatientArea ? 'bg-sky-600' : 'bg-slate-700'}`}
+              className={`w-8 h-8 rounded-md text-white flex items-center justify-center ${
+                isClinicArea ? 'bg-indigo-600' : isPatientArea ? 'bg-sky-600' : 'bg-slate-700'
+              }`}
             >
-              {isPatientArea ? 'P' : 'Psi'}
+              {isClinicArea ? 'C' : isPatientArea ? 'P' : 'Psi'}
             </div>
             <span className="truncate">
-              {isPatientArea ? 'Portal Paciente' : 'Área do Psicólogo'}
+              {isClinicArea
+                ? 'Painel da Clínica'
+                : isPatientArea
+                  ? 'Portal Paciente'
+                  : 'Área do Psicólogo'}
             </span>
           </div>
         ) : (
           <div
-            className={`w-8 h-8 rounded-md text-white flex items-center justify-center mx-auto ${isPatientArea ? 'bg-sky-600' : 'bg-slate-700'}`}
+            className={`w-8 h-8 rounded-md text-white flex items-center justify-center mx-auto ${
+              isClinicArea ? 'bg-indigo-600' : isPatientArea ? 'bg-sky-600' : 'bg-slate-700'
+            }`}
           >
-            {isPatientArea ? 'P' : 'Psi'}
+            {isClinicArea ? 'C' : isPatientArea ? 'P' : 'Psi'}
           </div>
         )}
       </SidebarHeader>
@@ -80,6 +108,7 @@ export function AppSidebar({ isPatientArea }: { isPatientArea?: boolean }) {
               location.pathname === item.path ||
               (item.path !== '/' &&
                 item.path !== '/paciente' &&
+                item.path !== '/clinica' &&
                 location.pathname.startsWith(item.path))
 
             return (

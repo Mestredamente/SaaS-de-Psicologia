@@ -16,6 +16,7 @@ import Pagamentos from '@/pages/Pagamentos'
 import Financeiro from '@/pages/Financeiro'
 import SessoesOnline from '@/pages/SessoesOnline'
 import NotFound from '@/pages/NotFound'
+import ClinicaDashboard from '@/pages/clinica/Dashboard'
 
 const App = () => (
   <BrowserRouter>
@@ -41,6 +42,15 @@ const App = () => (
             <Route path="/paciente/diario" element={<Diario />} />
             <Route path="/paciente/pagamentos" element={<Pagamentos />} />
             <Route path="/paciente/sessoes-online" element={<SessoesOnline />} />
+
+            {/* Clinic Routes */}
+            <Route path="/clinica" element={<ClinicaDashboard />} />
+            <Route path="/clinica/dashboard" element={<ClinicaDashboard />} />
+            <Route path="/clinica/psicologos" element={<ClinicaDashboard />} />
+            <Route path="/clinica/agenda" element={<ClinicaDashboard />} />
+            <Route path="/clinica/financeiro" element={<ClinicaDashboard />} />
+            <Route path="/clinica/relatorios" element={<ClinicaDashboard />} />
+            <Route path="/clinica/configuracoes" element={<ClinicaDashboard />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
