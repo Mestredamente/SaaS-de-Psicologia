@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-14T22:26:31.126Z",
+  "generatedAt": "2026-06-14T22:32:31.962Z",
   "collections": [
     {
       "name": "users",
@@ -501,6 +501,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "resumo",
+          "type": "editor",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -1171,6 +1177,74 @@
           "type": "date",
           "required": false,
           "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "sugestoes_ia_prontuario",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && psicologo_id.user_id = @request.auth.id",
+        "view": "@request.auth.id != '' && psicologo_id.user_id = @request.auth.id",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != '' && psicologo_id.user_id = @request.auth.id",
+        "delete": "@request.auth.id != '' && psicologo_id.user_id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "prontuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "prontuarios"
+        },
+        {
+          "name": "psicologo_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "perfis_psicologos"
+        },
+        {
+          "name": "texto_original",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "resumo_sugerido",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["pendente", "aprovado", "descartado"]
+        },
+        {
+          "name": "data_sugestao",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "created",

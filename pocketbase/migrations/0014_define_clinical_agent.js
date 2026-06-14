@@ -11,6 +11,8 @@ migrate(
     })
   },
   (app) => {
-    $ai.agents.delete(app, 'clinical-summarizer')
+    try {
+      $ai.agents.delete(app, 'clinical-summarizer')
+    } catch (_) {}
   },
 )
