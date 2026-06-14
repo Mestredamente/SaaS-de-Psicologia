@@ -30,18 +30,21 @@ export default function Layout() {
   }
 
   const role = user?.role || 'psicologo'
+  const isRoot = location.pathname === '/'
   const isPatientArea = location.pathname.startsWith('/paciente')
   const isClinicArea = location.pathname.startsWith('/clinica')
-  const isPsychologistArea = !isPatientArea && !isClinicArea
+  const isPsychologistArea = !isPatientArea && !isClinicArea && !isRoot
 
-  if (role === 'paciente' && !isPatientArea) {
-    return <Navigate to="/paciente" replace />
-  }
-  if (role === 'clinica' && !isClinicArea) {
-    return <Navigate to="/clinica" replace />
-  }
-  if (role === 'psicologo' && !isPsychologistArea) {
-    return <Navigate to="/" replace />
+  if (!isRoot) {
+    if (role === 'paciente' && !isPatientArea) {
+      return <Navigate to="/paciente" replace />
+    }
+    if (role === 'clinica' && !isClinicArea) {
+      return <Navigate to="/clinica" replace />
+    }
+    if (role === 'psicologo' && !isPsychologistArea) {
+      return <Navigate to="/agenda" replace />
+    }
   }
 
   return (
@@ -50,7 +53,7 @@ export default function Layout() {
         <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50 overflow-x-auto">
           {role === 'psicologo' && (
             <Link
-              to="/"
+              to="/agenda"
               className="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap bg-background shadow-sm text-foreground"
             >
               Área do Psicólogo

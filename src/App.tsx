@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { AuthProvider } from '@/hooks/use-auth'
+import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 import Layout from '@/components/Layout'
 import Index from '@/pages/Index'
@@ -18,6 +18,15 @@ import SessoesOnline from '@/pages/SessoesOnline'
 import NotFound from '@/pages/NotFound'
 import ClinicaDashboard from '@/pages/clinica/Dashboard'
 
+const RootRedirect = () => {
+  const { user } = useAuth()
+  const role = user?.role || 'psicologo'
+
+  if (role === 'paciente') return <Navigate to="/paciente" replace />
+  if (role === 'clinica') return <Navigate to="/clinica" replace />
+  return <Navigate to="/agenda" replace />
+}
+
 const App = () => (
   <BrowserRouter>
     <AuthProvider>
@@ -28,7 +37,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route element={<Layout />}>
             {/* Psychologist Routes */}
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<RootRedirect />} />
             <Route path="/agenda" element={<Agenda />} />
             <Route path="/prontuarios" element={<Prontuarios />} />
             <Route path="/financeiro" element={<Financeiro />} />
