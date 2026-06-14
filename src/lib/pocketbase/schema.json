@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-14T21:55:46.631Z",
+  "generatedAt": "2026-06-14T22:14:07.047Z",
   "collections": [
     {
       "name": "users",
@@ -569,6 +569,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "google_event_id",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": []
@@ -970,6 +976,79 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "name": "google_calendar_sync",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "usuario_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "tipo_usuario",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["psicologo", "clinica"]
+        },
+        {
+          "name": "google_calendar_id",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["ativo", "inativo"]
+        },
+        {
+          "name": "ultima_sincronizacao",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "auto_sync_novos",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "auto_sync_atualizacoes",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_gcs_usuario ON google_calendar_sync (usuario_id, status)"]
     }
   ]
 }

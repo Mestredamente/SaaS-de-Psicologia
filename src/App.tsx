@@ -8,6 +8,7 @@ import Layout from '@/components/Layout'
 import Index from '@/pages/Index'
 import Login from '@/pages/Login'
 import Agenda from '@/pages/Agenda'
+import Configuracoes from '@/pages/Configuracoes'
 import Perfil from '@/pages/Perfil'
 import Prontuario from '@/pages/Prontuario'
 import Prontuarios from '@/pages/Prontuarios'
@@ -42,6 +43,7 @@ const App = () => (
             {/* Psychologist Routes */}
             <Route path="/" element={<RootRedirect />} />
             <Route path="/agenda" element={<Agenda />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/prontuarios" element={<Prontuarios />} />
             <Route path="/financeiro" element={<Financeiro />} />
             <Route path="/sessoes-online" element={<SessoesOnline />} />
