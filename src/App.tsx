@@ -16,6 +16,7 @@ import Diario from '@/pages/Diario'
 import Pagamentos from '@/pages/Pagamentos'
 import Financeiro from '@/pages/Financeiro'
 import SessoesOnline from '@/pages/SessoesOnline'
+import SalaVirtual from '@/pages/SalaVirtual'
 import Contratos from '@/pages/Contratos'
 import NovoContrato from '@/pages/NovoContrato'
 import ContratoDetalhes from '@/pages/ContratoDetalhes'
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/prontuarios/:id" element={<Prontuarios />} />
             <Route path="/financeiro" element={<Financeiro />} />
             <Route path="/sessoes-online" element={<SessoesOnline />} />
+            <Route path="/sala-virtual/:id" element={<SalaVirtual />} />
             <Route path="/contratos-terapeuticos" element={<Contratos />} />
             <Route path="/contratos-terapeuticos/novo" element={<NovoContrato />} />
             <Route path="/contratos-terapeuticos/:id" element={<ContratoDetalhes />} />
@@ -60,6 +62,7 @@ const App = () => (
             <Route path="/paciente/diario" element={<Diario />} />
             <Route path="/paciente/pagamentos" element={<Pagamentos />} />
             <Route path="/paciente/sessoes-online" element={<SessoesOnline />} />
+            <Route path="/paciente/sala-virtual/:id" element={<SalaVirtual />} />
 
             {/* Clinic Routes */}
             <Route path="/clinica" element={<ClinicaDashboard />} />

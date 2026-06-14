@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-14T22:32:31.962Z",
+  "generatedAt": "2026-06-14T22:36:23.845Z",
   "collections": [
     {
       "name": "users",
@@ -1245,6 +1245,80 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "sessoes_online",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "agendamento_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "agendamentos"
+        },
+        {
+          "name": "psicologo_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "perfis_psicologos"
+        },
+        {
+          "name": "paciente_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "pacientes"
+        },
+        {
+          "name": "link_sala",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["aguardando", "em_andamento", "finalizada"]
+        },
+        {
+          "name": "hora_inicio",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "hora_fim",
+          "type": "date",
+          "required": false,
+          "system": false
         },
         {
           "name": "created",
