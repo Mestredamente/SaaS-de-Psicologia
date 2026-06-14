@@ -2,7 +2,7 @@ import { Outlet, Navigate, Link, useLocation } from 'react-router-dom'
 import { AppSidebar } from './AppSidebar'
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
 import { Input } from '@/components/ui/input'
-import { Search, LogOut } from 'lucide-react'
+import { Search, LogOut, LayoutDashboard, Calendar, User } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -47,44 +47,18 @@ export default function Layout() {
     }
   }
 
+  const roleDisplay =
+    role === 'psicologo' ? 'Psicólogo' : role === 'clinica' ? 'Clínica' : 'Paciente'
+
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
-      <div className="h-14 border-b bg-muted/20 px-6 flex items-center justify-center sm:justify-between shrink-0 z-50">
-        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50 overflow-x-auto">
-          {role === 'psicologo' && (
-            <Link
-              to="/agenda"
-              className="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap bg-background shadow-sm text-foreground"
-            >
-              Área do Psicólogo
-            </Link>
-          )}
-          {role === 'paciente' && (
-            <Link
-              to="/paciente"
-              className="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap bg-background shadow-sm text-foreground"
-            >
-              Área do Paciente
-            </Link>
-          )}
-          {role === 'clinica' && (
-            <Link
-              to="/clinica"
-              className="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap bg-background shadow-sm text-foreground"
-            >
-              Área da Clínica
-            </Link>
-          )}
-        </div>
-      </div>
-
       <div className="flex-1 flex overflow-hidden relative">
         <SidebarProvider className="min-h-0 h-full">
           <AppSidebar isPatientArea={isPatientArea} isClinicArea={isClinicArea} />
           <SidebarInset className="overflow-hidden flex flex-col">
-            <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 backdrop-blur px-6 sticky top-0 z-10">
+            <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 backdrop-blur px-6 sticky top-0 z-20">
               <SidebarTrigger className="-ml-2" />
-              <div className="flex-1 max-w-md">
+              <div className="flex-1 max-w-md hidden md:block">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -126,6 +100,53 @@ export default function Layout() {
                 </DropdownMenu>
               </div>
             </header>
+
+            <div className="flex flex-col sm:flex-row min-h-12 shrink-0 items-start sm:items-center justify-between border-b bg-muted/10 px-6 py-2 gap-3 sticky top-16 z-10 backdrop-blur">
+              <div className="text-sm text-muted-foreground flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-md border border-primary/10">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span>
+                  Você está acessando como:{' '}
+                  <strong className="text-foreground capitalize">{roleDisplay}</strong>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+                <Button
+                  variant={isPsychologistArea ? 'secondary' : 'ghost'}
+                  size="sm"
+                  asChild
+                  className="shrink-0"
+                >
+                  <Link to="/agenda">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Área do Psicólogo
+                  </Link>
+                </Button>
+                <Button
+                  variant={isClinicArea ? 'secondary' : 'ghost'}
+                  size="sm"
+                  asChild
+                  className="shrink-0"
+                >
+                  <Link to="/clinica">
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Área da Clínica
+                  </Link>
+                </Button>
+                <Button
+                  variant={isPatientArea ? 'secondary' : 'ghost'}
+                  size="sm"
+                  asChild
+                  className="shrink-0"
+                >
+                  <Link to="/paciente">
+                    <User className="w-4 h-4 mr-2" />
+                    Área do Paciente
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
             <div className="flex flex-1 flex-col gap-6 p-6 pb-12 overflow-y-auto">
               <Outlet />
             </div>
