@@ -9,13 +9,15 @@ import { useToast } from '@/components/ui/use-toast'
 import { Brain } from 'lucide-react'
 
 export default function Login() {
-  const [email, setEmail] = useState('mestredamente1@gmail.com')
+  const [email, setEmail] = useState('ana@psicologa.com')
   const [password, setPassword] = useState('Skip@Pass')
   const [isLoading, setIsLoading] = useState(false)
-  const { signIn, isAuthenticated } = useAuth()
+  const { signIn, isAuthenticated, user } = useAuth()
   const { toast } = useToast()
 
-  if (isAuthenticated) {
+  if (isAuthenticated && user) {
+    if (user.role === 'paciente') return <Navigate to="/paciente" replace />
+    if (user.role === 'clinica') return <Navigate to="/clinica" replace />
     return <Navigate to="/" replace />
   }
 
@@ -28,7 +30,7 @@ export default function Login() {
     if (error) {
       toast({
         variant: 'destructive',
-        title: 'Erro ao fazer login',
+        title: 'Email ou senha incorretos',
         description: 'Verifique suas credenciais e tente novamente.',
       })
     }

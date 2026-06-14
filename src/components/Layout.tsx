@@ -29,46 +29,49 @@ export default function Layout() {
     return <Navigate to="/login" replace />
   }
 
+  const role = user?.role || 'psicologo'
   const isPatientArea = location.pathname.startsWith('/paciente')
   const isClinicArea = location.pathname.startsWith('/clinica')
+  const isPsychologistArea = !isPatientArea && !isClinicArea
+
+  if (role === 'paciente' && !isPatientArea) {
+    return <Navigate to="/paciente" replace />
+  }
+  if (role === 'clinica' && !isClinicArea) {
+    return <Navigate to="/clinica" replace />
+  }
+  if (role === 'psicologo' && !isPsychologistArea) {
+    return <Navigate to="/" replace />
+  }
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
       <div className="h-14 border-b bg-muted/20 px-6 flex items-center justify-center sm:justify-between shrink-0 z-50">
         <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50 overflow-x-auto">
-          <Link
-            to="/"
-            className={cn(
-              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
-              !isPatientArea && !isClinicArea
-                ? 'bg-background shadow-sm text-foreground'
-                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
-            )}
-          >
-            Área do Psicólogo
-          </Link>
-          <Link
-            to="/paciente"
-            className={cn(
-              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
-              isPatientArea
-                ? 'bg-background shadow-sm text-foreground'
-                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
-            )}
-          >
-            Área do Paciente
-          </Link>
-          <Link
-            to="/clinica"
-            className={cn(
-              'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap',
-              isClinicArea
-                ? 'bg-background shadow-sm text-foreground'
-                : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
-            )}
-          >
-            Área da Clínica
-          </Link>
+          {role === 'psicologo' && (
+            <Link
+              to="/"
+              className="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap bg-background shadow-sm text-foreground"
+            >
+              Área do Psicólogo
+            </Link>
+          )}
+          {role === 'paciente' && (
+            <Link
+              to="/paciente"
+              className="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap bg-background shadow-sm text-foreground"
+            >
+              Área do Paciente
+            </Link>
+          )}
+          {role === 'clinica' && (
+            <Link
+              to="/clinica"
+              className="px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap bg-background shadow-sm text-foreground"
+            >
+              Área da Clínica
+            </Link>
+          )}
         </div>
       </div>
 
@@ -98,11 +101,13 @@ export default function Layout() {
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={user?.avatar ? pb.files.getUrl(user, user.avatar) : ''} />
                         <AvatarFallback className="bg-primary/20 text-primary">
-                          {user?.name?.charAt(0) || 'U'}
+                          {(user?.nome_completo || user?.name || 'U').charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium hidden md:block">{user?.name}</span>
-                    </Button>
+                      <span className="text-sm font-medium hidden md:block">
+                        {user?.nome_completo || user?.name}
+                      </span>
+                    </Button>{' '}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>

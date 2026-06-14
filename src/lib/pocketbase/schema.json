@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-14T21:04:49.418Z",
+  "generatedAt": "2026-06-14T21:13:02.357Z",
   "collections": [
     {
       "name": "users",
@@ -37,6 +37,26 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "role",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["psicologo", "paciente", "clinica"]
+        },
+        {
+          "name": "nome_completo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["ativo", "inativo"]
         }
       ],
       "indexes": [
