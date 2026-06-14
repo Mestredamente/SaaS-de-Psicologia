@@ -2,55 +2,41 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   Calendar,
-  Users,
+  AlertCircle,
+  Video,
+  MapPin,
   Activity,
   DollarSign,
+  BookHeart,
   Clock,
-  MapPin,
-  Video,
-  ArrowRight,
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
-import { format, parseISO } from 'date-fns'
+import { Link } from 'react-router-dom'
+import { format, parseISO, isTomorrow, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import { useRealtime } from '@/hooks/use-realtime'
-import {
-  getDashboardStats,
-  getUpcomingAppointments,
-  getRecentPatients,
-  getActivityChartData,
-  type DashboardStats,
-  type Atendimento,
-  type Paciente,
-  type ChartData,
-} from '@/services/dashboard'
+import { getCurrentPatient, getPatientStats, getNextSession } from '@/services/patientDashboard'
+import pb from '@/lib/pocketbase/client'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Index() {
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [appointments, setAppointments] = useState<Atendimento[]>([])
-  const [patients, setPatients] = useState<Paciente[]>([])
-  const [chartData, setChartData] = useState<ChartData[]>([])
+  const [patient, setPatient] = useState<any>(null)
+  const [stats, setStats] = useState<any>(null)
+  const [nextSession, setNextSession] = useState<any>(null)
+  const { toast } = useToast()
 
   const loadData = async () => {
     try {
-      const [newStats, newAppointments, newPatients, newChartData] = await Promise.all([
-        getDashboardStats(),
-        getUpcomingAppointments(),
-        getRecentPatients(),
-        getActivityChartData(),
-      ])
-      setStats(newStats)
-      setAppointments(newAppointments)
-      setPatients(newPatients)
-      setChartData(newChartData)
+      const p = await getCurrentPatient()
+      if (p) {
+        setPatient(p)
+        const [st, next] = await Promise.all([getPatientStats(p.id), getNextSession(p.id)])
+        setStats(st)
+        setNextSession(next)
+      }
     } catch (error) {
       console.error('Failed to load dashboard data', error)
     } finally {
@@ -62,44 +48,22 @@ export default function Index() {
     loadData()
   }, [])
 
-  useRealtime('atendimentos', () => {
-    loadData()
-  })
-  useRealtime('pacientes', () => {
-    loadData()
-  })
+  useRealtime('agendamentos', () => loadData())
+  useRealtime('pagamentos', () => loadData())
+  useRealtime('diario_sentimental', () => loadData())
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val)
   }
 
-  const getStatusBadge = (status: string) => {
-    const map: Record<
-      string,
-      {
-        label: string
-        variant: 'default' | 'secondary' | 'outline' | 'destructive'
-        color?: string
-      }
-    > = {
-      agendado: {
-        label: 'Agendado',
-        variant: 'default',
-        color: 'bg-blue-500 hover:bg-blue-600',
-      },
-      realizado: {
-        label: 'Realizado',
-        variant: 'secondary',
-        color: 'bg-emerald-500 hover:bg-emerald-600 text-white',
-      },
-      cancelado: { label: 'Cancelado', variant: 'destructive' },
+  const cancelSession = async (id: string) => {
+    try {
+      await pb.collection('agendamentos').update(id, { status: 'cancelado' })
+      toast({ title: 'Sessão cancelada com sucesso' })
+      loadData()
+    } catch (e) {
+      toast({ title: 'Erro ao cancelar sessão', variant: 'destructive' })
     }
-    const mapped = map[status] || { label: status, variant: 'outline' }
-    return (
-      <Badge className={mapped.color} variant={mapped.variant}>
-        {mapped.label}
-      </Badge>
-    )
   }
 
   if (loading) {
@@ -111,224 +75,178 @@ export default function Index() {
             <Skeleton key={i} className="h-32 w-full" />
           ))}
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-          <Skeleton className="h-96 md:col-span-4" />
-          <Skeleton className="h-96 md:col-span-3" />
-        </div>
       </div>
     )
   }
 
+  if (!patient) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-fade-in-up">
+        <AlertCircle className="w-16 h-16 text-muted-foreground mb-4" />
+        <h2 className="text-2xl font-bold mb-2">Acesso Restrito</h2>
+        <p className="text-muted-foreground">
+          Este portal é dedicado aos pacientes. Faça login com uma conta de paciente.
+        </p>
+      </div>
+    )
+  }
+
+  const firstName = patient.nome_completo?.split(' ')[0] || 'Paciente'
+  let reminder = null
+  if (nextSession) {
+    const sessionDate = parseISO(nextSession.data_hora)
+    if (isToday(sessionDate)) {
+      reminder = `Sua próxima sessão é hoje às ${format(sessionDate, 'HH:mm')}`
+    } else if (isTomorrow(sessionDate)) {
+      reminder = `Sua próxima sessão é amanhã às ${format(sessionDate, 'HH:mm')}`
+    }
+  }
+
   return (
     <div className="space-y-8 animate-fade-in-up">
-      {/* Greeting */}
+      {/* Greeting & Reminder */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Olá, {stats?.psychologistName}
+          Olá, {firstName}. Bem-vinda de volta.
         </h1>
-        <p className="text-lg text-muted-foreground mt-1">
-          {stats?.todayCount === 0
-            ? 'Você não tem atendimentos agendados para hoje.'
-            : `Você tem ${stats?.todayCount} atendimento${stats?.todayCount === 1 ? '' : 's'} hoje.`}
-        </p>
+        {reminder && (
+          <div className="mt-3 inline-flex items-center gap-2 bg-sky-100 text-sky-800 px-4 py-2 rounded-md font-medium">
+            <AlertCircle className="w-4 h-4" />
+            {reminder}
+          </div>
+        )}
       </div>
 
       {/* Summary Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover-card-effect border-none shadow-sm">
+        <Card className="border-none shadow-sm bg-emerald-50/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Atendimentos Hoje
+            <CardTitle className="text-sm font-medium text-emerald-800">
+              Sessões Realizadas este Mês
             </CardTitle>
-            <Calendar className="h-4 w-4 text-primary" />
+            <Activity className="h-4 w-4 text-emerald-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats?.todayCount}</div>
+            <div className="text-3xl font-bold text-emerald-900">{stats?.sessoesMes}</div>
           </CardContent>
         </Card>
 
-        <Card className="hover-card-effect border-none shadow-sm">
+        <Card className="border-none shadow-sm bg-sky-50/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pacientes Ativos
-            </CardTitle>
-            <Users className="h-4 w-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-sky-800">Sessões Agendadas</CardTitle>
+            <Calendar className="h-4 w-4 text-sky-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats?.activePatients}</div>
+            <div className="text-3xl font-bold text-sky-900">{stats?.agendadas}</div>
           </CardContent>
         </Card>
 
-        <Card className="hover-card-effect border-none shadow-sm">
+        <Card className="border-none shadow-sm bg-amber-50/50">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Sessões Esta Semana
-            </CardTitle>
-            <Activity className="h-4 w-4 text-blue-400" />
+            <CardTitle className="text-sm font-medium text-amber-800">Valor Pendente</CardTitle>
+            <DollarSign className="h-4 w-4 text-amber-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats?.weekSessions}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover-card-effect border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Receita do Mês
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
-              {formatCurrency(stats?.monthRevenue || 0)}
+            <div className="text-3xl font-bold text-amber-900">
+              {formatCurrency(stats?.valorPendente || 0)}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-sm bg-pink-50/50">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-pink-800">
+              Dias seguidos de diário
+            </CardTitle>
+            <BookHeart className="h-4 w-4 text-pink-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-pink-900">{stats?.streak}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        {/* Next Appointments */}
-        <Card className="lg:col-span-4 border-none shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/20">
-            <CardTitle className="text-lg font-semibold">Próximos Atendimentos</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="text-primary hover:text-primary/80"
-            >
-              <Link to="/agenda">
-                Ver agenda <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
+      {/* Next Session Highlight */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="border-none shadow-md overflow-hidden bg-gradient-to-br from-sky-600 to-blue-700 text-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Calendar className="w-5 h-5 opacity-80" /> Próxima Sessão
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-0 flex-1">
-            {appointments.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                Nenhum atendimento próximo.
-              </div>
-            ) : (
-              <div className="divide-y">
-                {appointments.map((apt) => (
-                  <div
-                    key={apt.id}
-                    className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                        {apt.expand?.paciente_id?.nome_completo?.charAt(0) || '?'}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {apt.expand?.paciente_id?.nome_completo}
-                        </p>
-                        <div className="flex items-center text-sm text-muted-foreground mt-1 space-x-3">
-                          <span className="flex items-center">
-                            <Clock className="mr-1 h-3.5 w-3.5" />{' '}
-                            {format(parseISO(apt.data_hora), 'HH:mm')}
-                          </span>
-                          <span className="flex items-center">
-                            {apt.tipo === 'online' ? (
-                              <Video className="mr-1 h-3.5 w-3.5" />
-                            ) : (
-                              <MapPin className="mr-1 h-3.5 w-3.5" />
-                            )}
-                            <span className="capitalize">{apt.tipo}</span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">{getStatusBadge(apt.status)}</div>
+          <CardContent>
+            {nextSession ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sky-100 text-sm">Com</p>
+                    <p className="text-xl font-bold">
+                      {nextSession.expand?.psicologo_id?.nome_completo}
+                    </p>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Activity Chart */}
-        <Card className="lg:col-span-3 border-none shadow-sm flex flex-col">
-          <CardHeader className="border-b bg-muted/20">
-            <CardTitle className="text-lg font-semibold">Sessões Realizadas</CardTitle>
-            <p className="text-sm text-muted-foreground">Últimos 7 dias</p>
-          </CardHeader>
-          <CardContent className="p-6 flex-1 flex flex-col justify-center">
-            <ChartContainer
-              config={{ sessoes: { label: 'Sessões', color: 'hsl(var(--primary))' } }}
-              className="h-[250px] w-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                  <Tooltip
-                    content={<ChartTooltipContent />}
-                    cursor={{ fill: 'hsl(var(--muted))' }}
-                  />
-                  <Bar
-                    dataKey="sessoes"
-                    fill="var(--color-sessoes)"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={40}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        {/* Recent Patients */}
-        <Card className="lg:col-span-7 border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/20">
-            <CardTitle className="text-lg font-semibold">Últimos Pacientes Atendidos</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="text-primary hover:text-primary/80"
-            >
-              <Link to="/pacientes">
-                Ver todos <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="p-0">
-            {patients.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">Nenhum paciente recente.</div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 divide-y md:divide-y-0 md:divide-x">
-                {patients.map((patient) => (
-                  <div
-                    key={patient.id}
-                    className="p-5 flex flex-col items-center text-center hover:bg-muted/30 transition-colors group"
+                  <Badge
+                    variant="secondary"
+                    className="bg-white/20 hover:bg-white/30 text-white border-none"
                   >
-                    <Avatar className="h-16 w-16 mb-3 border-2 border-background shadow-sm">
-                      <AvatarFallback className="bg-secondary text-secondary-foreground text-xl">
-                        {patient.nome_completo?.charAt(0) || '?'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <p className="font-semibold text-gray-900 truncate w-full mb-1">
-                      {patient.nome_completo}
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Última sessão:{' '}
-                      {patient.ultimo_atendimento
-                        ? format(parseISO(patient.ultimo_atendimento), "dd 'de' MMMM", {
-                            locale: ptBR,
-                          })
-                        : 'Nunca'}
-                    </p>
+                    {nextSession.tipo}
+                  </Badge>
+                </div>
+
+                <div className="flex items-center gap-6 py-2">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 opacity-80" />
+                    <span>
+                      {format(parseISO(nextSession.data_hora), "dd 'de' MMMM", { locale: ptBR })} às{' '}
+                      {format(parseISO(nextSession.data_hora), 'HH:mm')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  {nextSession.tipo === 'online' ? (
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full group-hover:border-primary group-hover:text-primary transition-colors"
-                      onClick={() => navigate(`/prontuarios/${patient.id}`)}
+                      variant="secondary"
+                      className="w-full bg-white text-sky-900 hover:bg-sky-50"
+                      asChild
                     >
-                      Acessar Prontuário
+                      <Link to="/sessoes-online">
+                        <Video className="w-4 h-4 mr-2" /> Entrar na Sala
+                      </Link>
                     </Button>
-                  </div>
-                ))}
+                  ) : (
+                    <Button
+                      variant="secondary"
+                      className="w-full bg-white text-sky-900 hover:bg-sky-50"
+                    >
+                      <MapPin className="w-4 h-4 mr-2" /> Ver Endereço
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full bg-transparent border-white/30 text-white hover:bg-white/10"
+                    asChild
+                  >
+                    <Link to="/agenda">Reagendar</Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-red-200"
+                    onClick={() => cancelSession(nextSession.id)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-sky-100">
+                Você não tem nenhuma sessão agendada.
+                <div className="mt-4">
+                  <Button variant="secondary" className="bg-white text-sky-900 hover:bg-sky-50">
+                    Agendar Nova Sessão
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>

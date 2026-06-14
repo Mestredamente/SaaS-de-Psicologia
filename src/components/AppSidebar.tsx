@@ -12,25 +12,23 @@ import {
 import {
   LayoutDashboard,
   CalendarDays,
-  Users,
+  UserCircle,
   FileText,
-  Files,
   DollarSign,
   Video,
-  Settings,
   LogOut,
+  BookHeart,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
 const navItems = [
   { title: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { title: 'Agenda', path: '/agenda', icon: CalendarDays },
-  { title: 'Pacientes', path: '/pacientes', icon: Users },
-  { title: 'Prontuários', path: '/prontuarios', icon: FileText },
-  { title: 'Documentos', path: '/documentos', icon: Files },
-  { title: 'Financeiro', path: '/financeiro', icon: DollarSign },
+  { title: 'Meu Perfil', path: '/perfil', icon: UserCircle },
+  { title: 'Minha Agenda', path: '/agenda', icon: CalendarDays },
+  { title: 'Meu Prontuário', path: '/prontuario', icon: FileText },
+  { title: 'Meu Diário', path: '/diario', icon: BookHeart },
+  { title: 'Pagamentos', path: '/pagamentos', icon: DollarSign },
   { title: 'Sessões Online', path: '/sessoes-online', icon: Video },
-  { title: 'Configurações', path: '/configuracoes', icon: Settings },
 ]
 
 export function AppSidebar() {
@@ -40,16 +38,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader className="h-16 flex items-center px-4 border-b">
+      <SidebarHeader className="h-16 flex items-center px-4 border-b bg-sky-50/30">
         {state === 'expanded' ? (
-          <div className="font-semibold text-lg text-primary flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-primary text-primary-foreground flex items-center justify-center">
+          <div className="font-semibold text-lg text-sky-600 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-sky-600 text-white flex items-center justify-center">
               P
             </div>
-            <span>PsicoGestão</span>
+            <span>Portal Paciente</span>
           </div>
         ) : (
-          <div className="w-8 h-8 rounded-md bg-primary text-primary-foreground flex items-center justify-center mx-auto">
+          <div className="w-8 h-8 rounded-md bg-sky-600 text-white flex items-center justify-center mx-auto">
             P
           </div>
         )}

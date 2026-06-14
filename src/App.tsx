@@ -8,12 +8,11 @@ import Layout from '@/components/Layout'
 import Index from '@/pages/Index'
 import Login from '@/pages/Login'
 import Agenda from '@/pages/Agenda'
-import Pacientes from '@/pages/Pacientes'
-import Prontuarios from '@/pages/Prontuarios'
-import Documentos from '@/pages/Documentos'
-import Financeiro from '@/pages/Financeiro'
+import Perfil from '@/pages/Perfil'
+import Prontuario from '@/pages/Prontuario'
+import Diario from '@/pages/Diario'
+import Pagamentos from '@/pages/Pagamentos'
 import SessoesOnline from '@/pages/SessoesOnline'
-import Configuracoes from '@/pages/Configuracoes'
 import NotFound from '@/pages/NotFound'
 
 const App = () => (
@@ -26,14 +25,12 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
+            <Route path="/perfil" element={<Perfil />} />
             <Route path="/agenda" element={<Agenda />} />
-            <Route path="/pacientes" element={<Pacientes />} />
-            <Route path="/prontuarios" element={<Prontuarios />} />
-            <Route path="/prontuarios/:id" element={<Prontuarios />} />
-            <Route path="/documentos" element={<Documentos />} />
-            <Route path="/financeiro" element={<Financeiro />} />
+            <Route path="/prontuario" element={<Prontuario />} />
+            <Route path="/diario" element={<Diario />} />
+            <Route path="/pagamentos" element={<Pagamentos />} />
             <Route path="/sessoes-online" element={<SessoesOnline />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
