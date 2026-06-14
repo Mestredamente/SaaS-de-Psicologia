@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-14T21:44:09.027Z",
+  "generatedAt": "2026-06-14T21:55:46.631Z",
   "collections": [
     {
       "name": "users",
@@ -877,6 +877,79 @@
         },
         {
           "name": "data_vinculo",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "contratos_terapeuticos",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "psicologo_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "perfis_psicologos"
+        },
+        {
+          "name": "paciente_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "pacientes"
+        },
+        {
+          "name": "numero_contrato",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "data_emissao",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["rascunho", "enviado", "assinado", "cancelado"]
+        },
+        {
+          "name": "conteudo",
+          "type": "editor",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "data_assinatura",
           "type": "date",
           "required": false,
           "system": false

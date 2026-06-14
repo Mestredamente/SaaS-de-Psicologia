@@ -15,6 +15,9 @@ import Diario from '@/pages/Diario'
 import Pagamentos from '@/pages/Pagamentos'
 import Financeiro from '@/pages/Financeiro'
 import SessoesOnline from '@/pages/SessoesOnline'
+import Contratos from '@/pages/Contratos'
+import NovoContrato from '@/pages/NovoContrato'
+import ContratoDetalhes from '@/pages/ContratoDetalhes'
 import NotFound from '@/pages/NotFound'
 import ClinicaDashboard from '@/pages/clinica/Dashboard'
 
@@ -42,6 +45,9 @@ const App = () => (
             <Route path="/prontuarios" element={<Prontuarios />} />
             <Route path="/financeiro" element={<Financeiro />} />
             <Route path="/sessoes-online" element={<SessoesOnline />} />
+            <Route path="/contratos-terapeuticos" element={<Contratos />} />
+            <Route path="/contratos-terapeuticos/novo" element={<NovoContrato />} />
+            <Route path="/contratos-terapeuticos/:id" element={<ContratoDetalhes />} />
 
             {/* Patient Routes */}
             <Route path="/paciente" element={<Index />} />
