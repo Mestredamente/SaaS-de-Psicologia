@@ -1,5 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
-import { useAuth } from '@/hooks/use-auth'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,7 +12,6 @@ import {
   MapPin,
   Video,
   ArrowRight,
-  User,
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { format, parseISO } from 'date-fns'
@@ -27,19 +25,18 @@ import {
   getRecentPatients,
   getActivityChartData,
   type DashboardStats,
-  type Appointment,
-  type Patient,
+  type Atendimento,
+  type Paciente,
   type ChartData,
 } from '@/services/dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Index() {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [patients, setPatients] = useState<Patient[]>([])
+  const [appointments, setAppointments] = useState<Atendimento[]>([])
+  const [patients, setPatients] = useState<Paciente[]>([])
   const [chartData, setChartData] = useState<ChartData[]>([])
 
   const loadData = async () => {
@@ -65,10 +62,10 @@ export default function Index() {
     loadData()
   }, [])
 
-  useRealtime('appointments', () => {
+  useRealtime('atendimentos', () => {
     loadData()
   })
-  useRealtime('patients', () => {
+  useRealtime('pacientes', () => {
     loadData()
   })
 
@@ -85,14 +82,17 @@ export default function Index() {
         color?: string
       }
     > = {
-      confirmado: {
-        label: 'Confirmado',
+      agendado: {
+        label: 'Agendado',
         variant: 'default',
-        color: 'bg-emerald-500 hover:bg-emerald-600',
+        color: 'bg-blue-500 hover:bg-blue-600',
       },
-      pendente: { label: 'Pendente', variant: 'secondary' },
+      realizado: {
+        label: 'Realizado',
+        variant: 'secondary',
+        color: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+      },
       cancelado: { label: 'Cancelado', variant: 'destructive' },
-      concluido: { label: 'Concluído', variant: 'outline' },
     }
     const mapped = map[status] || { label: status, variant: 'outline' }
     return (
@@ -124,7 +124,7 @@ export default function Index() {
       {/* Greeting */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Olá, {user?.name?.split(' ')[0] || 'Doutor(a)'}
+          Olá, {stats?.psychologistName}
         </h1>
         <p className="text-lg text-muted-foreground mt-1">
           {stats?.todayCount === 0
@@ -217,22 +217,24 @@ export default function Index() {
                   >
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                        {apt.expand?.patient?.name.charAt(0)}
+                        {apt.expand?.paciente_id?.nome_completo?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{apt.expand?.patient?.name}</p>
+                        <p className="font-semibold text-gray-900">
+                          {apt.expand?.paciente_id?.nome_completo}
+                        </p>
                         <div className="flex items-center text-sm text-muted-foreground mt-1 space-x-3">
                           <span className="flex items-center">
                             <Clock className="mr-1 h-3.5 w-3.5" />{' '}
-                            {format(parseISO(apt.date_time), 'HH:mm')}
+                            {format(parseISO(apt.data_hora), 'HH:mm')}
                           </span>
                           <span className="flex items-center">
-                            {apt.type === 'online' ? (
+                            {apt.tipo === 'online' ? (
                               <Video className="mr-1 h-3.5 w-3.5" />
                             ) : (
                               <MapPin className="mr-1 h-3.5 w-3.5" />
                             )}
-                            <span className="capitalize">{apt.type}</span>
+                            <span className="capitalize">{apt.tipo}</span>
                           </span>
                         </div>
                       </div>
@@ -303,16 +305,18 @@ export default function Index() {
                   >
                     <Avatar className="h-16 w-16 mb-3 border-2 border-background shadow-sm">
                       <AvatarFallback className="bg-secondary text-secondary-foreground text-xl">
-                        {patient.name.charAt(0)}
+                        {patient.nome_completo?.charAt(0) || '?'}
                       </AvatarFallback>
                     </Avatar>
                     <p className="font-semibold text-gray-900 truncate w-full mb-1">
-                      {patient.name}
+                      {patient.nome_completo}
                     </p>
                     <p className="text-xs text-muted-foreground mb-4">
                       Última sessão:{' '}
-                      {patient.last_session
-                        ? format(parseISO(patient.last_session), "dd 'de' MMMM", { locale: ptBR })
+                      {patient.ultimo_atendimento
+                        ? format(parseISO(patient.ultimo_atendimento), "dd 'de' MMMM", {
+                            locale: ptBR,
+                          })
                         : 'Nunca'}
                     </p>
                     <Button

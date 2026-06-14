@@ -2,78 +2,89 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard,
-  Calendar,
+  CalendarDays,
   Users,
   FileText,
-  FolderOpen,
-  CircleDollarSign,
+  Files,
+  DollarSign,
   Video,
   Settings,
-  Brain,
+  LogOut,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 const navItems = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'Agenda', url: '/agenda', icon: Calendar },
-  { title: 'Pacientes', url: '/pacientes', icon: Users },
-  { title: 'Prontuários', url: '/prontuarios', icon: FileText },
-  { title: 'Documentos', url: '/documentos', icon: FolderOpen },
-  { title: 'Financeiro', url: '/financeiro', icon: CircleDollarSign },
-  { title: 'Sessões Online', url: '/sessoes-online', icon: Video },
-  { title: 'Configurações', url: '/configuracoes', icon: Settings },
+  { title: 'Dashboard', path: '/', icon: LayoutDashboard },
+  { title: 'Agenda', path: '/agenda', icon: CalendarDays },
+  { title: 'Pacientes', path: '/pacientes', icon: Users },
+  { title: 'Prontuários', path: '/prontuarios', icon: FileText },
+  { title: 'Documentos', path: '/documentos', icon: Files },
+  { title: 'Financeiro', path: '/financeiro', icon: DollarSign },
+  { title: 'Sessões Online', path: '/sessoes-online', icon: Video },
+  { title: 'Configurações', path: '/configuracoes', icon: Settings },
 ]
 
 export function AppSidebar() {
   const location = useLocation()
+  const { signOut } = useAuth()
+  const { state } = useSidebar()
 
   return (
-    <Sidebar>
-      <SidebarHeader className="h-16 flex items-center px-6 border-b">
-        <div className="flex items-center gap-2 font-semibold text-lg text-primary">
-          <Brain className="h-6 w-6" />
-          <span>PsicoGestão</span>
-        </div>
+    <Sidebar variant="inset" collapsible="icon">
+      <SidebarHeader className="h-16 flex items-center px-4 border-b">
+        {state === 'expanded' ? (
+          <div className="font-semibold text-lg text-primary flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-primary text-primary-foreground flex items-center justify-center">
+              P
+            </div>
+            <span>PsicoGestão</span>
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-md bg-primary text-primary-foreground flex items-center justify-center mx-auto">
+            P
+          </div>
+        )}
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-2 mt-4 px-2">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.url
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      className={cn(
-                        'h-10 px-4 rounded-lg transition-colors',
-                        isActive
-                          ? 'bg-primary/10 text-primary font-medium border-l-4 border-primary'
-                          : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground border-l-4 border-transparent',
-                      )}
-                    >
-                      <Link to={item.url} className="flex items-center gap-3">
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="px-2 py-4">
+        <SidebarMenu>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.path}>
+              <SidebarMenuButton
+                asChild
+                isActive={
+                  location.pathname === item.path ||
+                  (item.path !== '/' && location.pathname.startsWith(item.path))
+                }
+                tooltip={item.title}
+              >
+                <Link to={item.path}>
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter className="p-4 border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={signOut} tooltip="Sair" variant="outline">
+              <LogOut className="h-5 w-5" />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
