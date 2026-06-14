@@ -40,6 +40,7 @@ export default function Agenda() {
   const [patientsList, setPatientsList] = useState<any[]>([])
   const [syncSettings, setSyncSettings] = useState<any>(null)
 
+  const [wppNotifs, setWppNotifs] = useState<any[]>([])
   const [rescheduleData, setRescheduleData] = useState<any>(null)
   const [editData, setEditData] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -50,13 +51,11 @@ export default function Agenda() {
       if (isPatient) {
         const p = await getCurrentPatient()
         if (!p) return setLoading(false)
-        const records = await pb
-          .collection('agendamentos')
-          .getFullList({
-            filter: `paciente_id="${p.id}"`,
-            sort: '-data_hora',
-            expand: 'psicologo_id',
-          })
+        const records = await pb.collection('agendamentos').getFullList({
+          filter: `paciente_id="${p.id}"`,
+          sort: '-data_hora',
+          expand: 'psicologo_id',
+        })
         setAgendamentos(records)
       } else if (isPsychologist) {
         const perfil = await pb
@@ -64,22 +63,25 @@ export default function Agenda() {
           .getFirstListItem(`user_id="${user.id}"`)
         setPsiProfile(perfil)
         const [records, patients, sync] = await Promise.all([
-          pb
-            .collection('agendamentos')
-            .getFullList({
-              filter: `psicologo_id="${perfil.id}"`,
-              sort: '-data_hora',
-              expand: 'paciente_id',
-            }),
+          pb.collection('agendamentos').getFullList({
+            filter: `psicologo_id="${perfil.id}"`,
+            sort: '-data_hora',
+            expand: 'paciente_id',
+          }),
           pb.collection('pacientes').getFullList({ filter: `psicologo_id="${perfil.id}"` }),
           pb
             .collection('google_calendar_sync')
             .getFirstListItem(`usuario_id="${user.id}" && status="ativo"`)
             .catch(() => null),
+          pb
+            .collection('notificacoes_whatsapp')
+            .getFullList({ filter: `agendamento_id.psicologo_id="${perfil.id}"` })
+            .catch(() => []),
         ])
         setAgendamentos(records)
         setPatientsList(patients)
         setSyncSettings(sync)
+        setWppNotifs(notifs)
       }
     } catch (e) {
       console.error(e)
@@ -118,16 +120,18 @@ export default function Agenda() {
     setSaving(true)
     try {
       const isoDate = new Date(`${editData.date}T${editData.time}:00`).toISOString()
+      const dataHoraFinal = isoDate.replace('T', ' ').substring(0, 19) + 'Z'
       const data = {
         paciente_id: editData.paciente_id,
         psicologo_id: psyProfile.id,
-        data_hora: isoDate.replace('T', ' ').substring(0, 19) + 'Z',
+        data_hora: dataHoraFinal,
         tipo: editData.tipo,
         status: editData.status,
         valor: 0,
       }
       let record
-      if (editData.id) record = await pb.collection('agendamentos').update(editData.id, data)
+      const isNew = !editData.id
+      if (!isNew) record = await pb.collection('agendamentos').update(editData.id, data)
       else record = await pb.collection('agendamentos').create(data)
 
       if (editData.syncGoogle && syncSettings) {
@@ -136,6 +140,45 @@ export default function Agenda() {
           body: JSON.stringify({ agendamento_id: record.id }),
         })
       }
+
+      if (editData.sendWhatsapp) {
+        const paciente = patientsList.find((p) => p.id === data.paciente_id)
+        if (paciente) {
+          let wppTipo = 'confirmacao'
+          if (!isNew) {
+            if (data.status === 'cancelado' && editData.originalStatus !== 'cancelado')
+              wppTipo = 'cancelamento'
+            else if (dataHoraFinal !== editData.originalDateTime || data.status === 'reagendado')
+              wppTipo = 'reagendamento'
+            else wppTipo = 'lembrete_consulta'
+          }
+
+          const dataFormatada = format(parseISO(isoDate), 'dd/MM/yyyy')
+          const horaFormatada = format(parseISO(isoDate), 'HH:mm')
+          const psyNome = psyProfile.nome_completo
+
+          let mensagem = ''
+          if (wppTipo === 'confirmacao') {
+            mensagem = `Olá ${paciente.nome_completo}, sua sessão com a ${psyNome} foi agendada para ${dataFormatada} às ${horaFormatada}. Tipo: ${data.tipo}. Endereço: Consultório/Online. Responda CANCELAR se precisar desmarcar.`
+          } else if (wppTipo === 'cancelamento') {
+            mensagem = `Olá ${paciente.nome_completo}, sua sessão do dia ${dataFormatada} às ${horaFormatada} com a ${psyNome} foi cancelada. Entre em contato para reagendar.`
+          } else if (wppTipo === 'reagendamento') {
+            mensagem = `Olá ${paciente.nome_completo}, sua sessão com a ${psyNome} foi reagendada para ${dataFormatada} às ${horaFormatada}. Tipo: ${data.tipo}. Link: Consultório/Online. Responda CONFIRMAR para confirmar.`
+          } else {
+            mensagem = `Olá ${paciente.nome_completo}, lembramos que você tem uma sessão agendada amanhã dia ${dataFormatada} às ${horaFormatada} com a ${psyNome}. Tipo: ${data.tipo}. Endereço: Consultório/Online. Responda CONFIRMAR para confirmar ou CANCELAR para cancelar.`
+          }
+
+          await pb.collection('notificacoes_whatsapp').create({
+            paciente_id: paciente.id,
+            agendamento_id: record.id,
+            tipo: wppTipo,
+            status: 'pendente',
+            telefone_destino: paciente.telefone || '00000000000',
+            mensagem,
+          })
+        }
+      }
+
       toast({ title: 'Salvo com sucesso' })
       setEditData(null)
       loadData()
@@ -143,6 +186,16 @@ export default function Agenda() {
       toast({ title: 'Erro ao salvar', variant: 'destructive' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleResendWpp = async (id: string) => {
+    try {
+      await pb.collection('notificacoes_whatsapp').update(id, { status: 'pendente' })
+      toast({ title: 'Reenvio solicitado' })
+      loadData()
+    } catch (e) {
+      toast({ title: 'Erro ao reenviar', variant: 'destructive' })
     }
   }
 
@@ -177,6 +230,7 @@ export default function Agenda() {
                   status: 'agendado',
                   paciente_id: '',
                   syncGoogle: syncSettings?.auto_sync_novos || false,
+                  sendWhatsapp: false,
                 })
               }
             >
@@ -222,6 +276,21 @@ export default function Agenda() {
                       >
                         {a.status}
                       </Badge>
+                      {wppNotifs.find((n) => n.agendamento_id === a.id && n.status === 'falha') && (
+                        <Badge
+                          variant="destructive"
+                          className="cursor-pointer hover:bg-red-600 text-[10px] mt-2 block w-max"
+                          onClick={() =>
+                            handleResendWpp(
+                              wppNotifs.find(
+                                (n) => n.agendamento_id === a.id && n.status === 'falha',
+                              )?.id,
+                            )
+                          }
+                        >
+                          Reenviar WhatsApp (Falha)
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground capitalize">
                       Sessão {a.tipo} •{' '}
@@ -253,10 +322,13 @@ export default function Agenda() {
                             id: a.id,
                             date: format(parseISO(a.data_hora), 'yyyy-MM-dd'),
                             time: format(parseISO(a.data_hora), 'HH:mm'),
+                            originalDateTime: a.data_hora,
+                            originalStatus: a.status,
                             tipo: a.tipo,
                             status: a.status,
                             paciente_id: a.paciente_id,
                             syncGoogle: syncSettings?.auto_sync_atualizacoes || false,
+                            sendWhatsapp: false,
                           })
                         }
                       >
@@ -397,6 +469,16 @@ export default function Agenda() {
                     </Label>
                   </div>
                 )}
+                <div className="flex items-center space-x-2 pt-4 mt-2 border-t">
+                  <Checkbox
+                    id="send-whatsapp"
+                    checked={editData.sendWhatsapp}
+                    onCheckedChange={(v) => setEditData((p: any) => ({ ...p, sendWhatsapp: !!v }))}
+                  />
+                  <Label htmlFor="send-whatsapp" className="cursor-pointer">
+                    Enviar notificação WhatsApp
+                  </Label>
+                </div>
               </div>
             )}
             <DialogFooter>
