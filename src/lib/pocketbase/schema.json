@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-14T22:49:57.279Z",
+  "generatedAt": "2026-06-14T22:59:06.437Z",
   "collections": [
     {
       "name": "users",
@@ -43,7 +43,7 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["psicologo", "paciente", "clinica"]
+          "selectValues": ["psicologo", "paciente", "clinica", "funcionario"]
         },
         {
           "name": "nome_completo",
@@ -1317,6 +1317,104 @@
         {
           "name": "hora_fim",
           "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "name": "funcionarios",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "user_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "clinica_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "clinicas"
+        },
+        {
+          "name": "nome_completo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "telefone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cargo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["secretaria", "rh", "administrativo"]
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["ativo", "inativo"]
+        },
+        {
+          "name": "permissao_agenda",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "permissao_pacientes",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "permissao_financeiro",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "permissao_relatorios",
+          "type": "bool",
           "required": false,
           "system": false
         },

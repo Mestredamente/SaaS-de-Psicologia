@@ -33,7 +33,8 @@ export default function Layout() {
   const isRoot = location.pathname === '/'
   const isPatientArea = location.pathname.startsWith('/paciente')
   const isClinicArea = location.pathname.startsWith('/clinica')
-  const isPsychologistArea = !isPatientArea && !isClinicArea && !isRoot
+  const isFuncionarioArea = location.pathname.startsWith('/funcionario')
+  const isPsychologistArea = !isPatientArea && !isClinicArea && !isFuncionarioArea && !isRoot
 
   if (!isRoot) {
     if (role === 'paciente' && !isPatientArea) {
@@ -42,20 +43,41 @@ export default function Layout() {
     if (role === 'clinica' && !isClinicArea) {
       return <Navigate to="/clinica" replace />
     }
+    if (role === 'funcionario' && !isFuncionarioArea) {
+      return <Navigate to="/funcionario" replace />
+    }
     if (role === 'psicologo' && !isPsychologistArea) {
       return <Navigate to="/agenda" replace />
     }
   }
 
   const roleDisplay =
-    role === 'psicologo' ? 'Psicólogo' : role === 'clinica' ? 'Clínica' : 'Paciente'
+    role === 'psicologo'
+      ? 'Psicólogo'
+      : role === 'clinica'
+        ? 'Clínica'
+        : role === 'funcionario'
+          ? 'Funcionário'
+          : 'Paciente'
 
   return (
     <div className="flex flex-col h-screen w-full bg-background overflow-hidden">
       <div className="flex-1 flex overflow-hidden relative">
         <SidebarProvider className="min-h-0 h-full">
-          <AppSidebar isPatientArea={isPatientArea} isClinicArea={isClinicArea} />
+          <AppSidebar
+            isPatientArea={isPatientArea}
+            isClinicArea={isClinicArea}
+            isFuncionarioArea={isFuncionarioArea}
+          />
           <SidebarInset className="overflow-hidden flex flex-col">
+            {isFuncionarioArea && (
+              <div className="flex shrink-0 bg-indigo-50 border-b px-4 py-1.5 text-xs text-indigo-700 items-center gap-2 z-30">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                <span className="truncate">
+                  Você está acessando como: <strong className="capitalize">{roleDisplay}</strong>
+                </span>
+              </div>
+            )}
             <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/95 backdrop-blur px-4 md:px-6 sticky top-0 z-20">
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="-ml-2" />
@@ -63,17 +85,23 @@ export default function Layout() {
                   <div
                     className={cn(
                       'w-8 h-8 rounded-md text-white flex items-center justify-center font-bold text-sm',
-                      isClinicArea
+                      isClinicArea || isFuncionarioArea
                         ? 'bg-indigo-600'
                         : isPatientArea
                           ? 'bg-sky-600'
                           : 'bg-slate-700',
                     )}
                   >
-                    {isClinicArea ? 'C' : isPatientArea ? 'P' : 'Psi'}
+                    {isClinicArea ? 'C' : isFuncionarioArea ? 'F' : isPatientArea ? 'P' : 'Psi'}
                   </div>
                   <span className="font-semibold text-sm truncate max-w-[120px]">
-                    {isClinicArea ? 'Clínica' : isPatientArea ? 'Paciente' : 'Psicólogo'}
+                    {isClinicArea
+                      ? 'Clínica'
+                      : isFuncionarioArea
+                        ? 'Funcionário'
+                        : isPatientArea
+                          ? 'Paciente'
+                          : 'Psicólogo'}
                   </span>
                 </div>
               </div>
@@ -90,13 +118,15 @@ export default function Layout() {
               </div>
 
               <div className="ml-auto flex items-center gap-2 md:gap-4 shrink-0">
-                <div className="hidden md:flex text-sm text-muted-foreground items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="whitespace-nowrap">
-                    Você está acessando como:{' '}
-                    <strong className="text-foreground capitalize">{roleDisplay}</strong>
-                  </span>
-                </div>
+                {!isFuncionarioArea && (
+                  <div className="hidden md:flex text-sm text-muted-foreground items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    <span className="whitespace-nowrap">
+                      Você está acessando como:{' '}
+                      <strong className="text-foreground capitalize">{roleDisplay}</strong>
+                    </span>
+                  </div>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -130,6 +160,15 @@ export default function Layout() {
                       >
                         <User className="w-4 h-4" />
                         Área do Paciente
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/funcionario"
+                        className="w-full cursor-pointer flex items-center gap-2"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        Área do Funcionário
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

@@ -55,54 +55,94 @@ const clinicNavItems = [
   { title: 'Configurações', path: '/clinica/configuracoes', icon: Settings },
 ]
 
+import { useFuncionario } from '@/hooks/use-funcionario'
+
+const funcionarioBaseNavItems = [
+  { title: 'Dashboard', path: '/funcionario', icon: LayoutDashboard },
+  { title: 'Agenda da Clínica', path: '/funcionario/agenda', icon: CalendarDays },
+  { title: 'Pacientes', path: '/funcionario/pacientes', icon: UserCircle },
+]
+
 export function AppSidebar({
   isPatientArea,
   isClinicArea,
+  isFuncionarioArea,
 }: {
   isPatientArea?: boolean
   isClinicArea?: boolean
+  isFuncionarioArea?: boolean
 }) {
+  const { funcionario } = useFuncionario()
   const location = useLocation()
   const { signOut } = useAuth()
   const { state } = useSidebar()
 
-  const navItems = isClinicArea ? clinicNavItems : isPatientArea ? patientNavItems : psychNavItems
+  let navItems = isClinicArea ? clinicNavItems : isPatientArea ? patientNavItems : psychNavItems
+
+  if (isFuncionarioArea) {
+    navItems = [...funcionarioBaseNavItems]
+    if (funcionario?.permissao_financeiro) {
+      navItems.push({ title: 'Financeiro', path: '/funcionario/financeiro', icon: Wallet })
+    }
+    if (funcionario?.permissao_relatorios) {
+      navItems.push({ title: 'Relatórios', path: '/funcionario/relatorios', icon: FileText })
+    }
+    navItems.push({ title: 'Configurações', path: '/funcionario/configuracoes', icon: Settings })
+  }
 
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader
         className={`h-16 flex items-center px-4 border-b transition-colors ${
-          isClinicArea ? 'bg-indigo-50/30' : isPatientArea ? 'bg-sky-50/30' : 'bg-slate-50/30'
+          isClinicArea || isFuncionarioArea
+            ? 'bg-indigo-50/30'
+            : isPatientArea
+              ? 'bg-sky-50/30'
+              : 'bg-slate-50/30'
         }`}
       >
         {state === 'expanded' ? (
           <div
             className={`font-semibold text-lg flex items-center gap-2 ${
-              isClinicArea ? 'text-indigo-600' : isPatientArea ? 'text-sky-600' : 'text-slate-700'
+              isClinicArea || isFuncionarioArea
+                ? 'text-indigo-600'
+                : isPatientArea
+                  ? 'text-sky-600'
+                  : 'text-slate-700'
             }`}
           >
             <div
               className={`w-8 h-8 rounded-md text-white flex items-center justify-center ${
-                isClinicArea ? 'bg-indigo-600' : isPatientArea ? 'bg-sky-600' : 'bg-slate-700'
+                isClinicArea || isFuncionarioArea
+                  ? 'bg-indigo-600'
+                  : isPatientArea
+                    ? 'bg-sky-600'
+                    : 'bg-slate-700'
               }`}
             >
-              {isClinicArea ? 'C' : isPatientArea ? 'P' : 'Psi'}
+              {isClinicArea ? 'C' : isFuncionarioArea ? 'F' : isPatientArea ? 'P' : 'Psi'}
             </div>
             <span className="truncate">
               {isClinicArea
                 ? 'Painel da Clínica'
-                : isPatientArea
-                  ? 'Portal Paciente'
-                  : 'Área do Psicólogo'}
+                : isFuncionarioArea
+                  ? 'Painel Funcionário'
+                  : isPatientArea
+                    ? 'Portal Paciente'
+                    : 'Área do Psicólogo'}
             </span>
           </div>
         ) : (
           <div
             className={`w-8 h-8 rounded-md text-white flex items-center justify-center mx-auto ${
-              isClinicArea ? 'bg-indigo-600' : isPatientArea ? 'bg-sky-600' : 'bg-slate-700'
+              isClinicArea || isFuncionarioArea
+                ? 'bg-indigo-600'
+                : isPatientArea
+                  ? 'bg-sky-600'
+                  : 'bg-slate-700'
             }`}
           >
-            {isClinicArea ? 'C' : isPatientArea ? 'P' : 'Psi'}
+            {isClinicArea ? 'C' : isFuncionarioArea ? 'F' : isPatientArea ? 'P' : 'Psi'}
           </div>
         )}
       </SidebarHeader>
@@ -117,6 +157,7 @@ export function AppSidebar({
                   (item.path !== '/' &&
                     item.path !== '/paciente' &&
                     item.path !== '/clinica' &&
+                    item.path !== '/funcionario' &&
                     location.pathname.startsWith(item.path))
 
                 return (
@@ -164,6 +205,16 @@ export function AppSidebar({
                     <Link to="/paciente">
                       <User className="h-5 w-5" />
                       <span>Área do Paciente</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {isFuncionarioArea ? null : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Área do Funcionário">
+                    <Link to="/funcionario">
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span>Área do Funcionário</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

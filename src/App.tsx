@@ -22,6 +22,9 @@ import NovoContrato from '@/pages/NovoContrato'
 import ContratoDetalhes from '@/pages/ContratoDetalhes'
 import NotFound from '@/pages/NotFound'
 import ClinicaDashboard from '@/pages/clinica/Dashboard'
+import FuncionarioDashboard from '@/pages/funcionario/Dashboard'
+import FuncionarioAgenda from '@/pages/funcionario/Agenda'
+import FuncionarioPacientes from '@/pages/funcionario/Pacientes'
 
 const RootRedirect = () => {
   const { user } = useAuth()
@@ -29,6 +32,7 @@ const RootRedirect = () => {
 
   if (role === 'paciente') return <Navigate to="/paciente" replace />
   if (role === 'clinica') return <Navigate to="/clinica" replace />
+  if (role === 'funcionario') return <Navigate to="/funcionario" replace />
   return <Navigate to="/agenda" replace />
 }
 
@@ -72,6 +76,15 @@ const App = () => (
             <Route path="/clinica/financeiro" element={<ClinicaDashboard />} />
             <Route path="/clinica/relatorios" element={<ClinicaDashboard />} />
             <Route path="/clinica/configuracoes" element={<ClinicaDashboard />} />
+
+            {/* Funcionario Routes */}
+            <Route path="/funcionario" element={<FuncionarioDashboard />} />
+            <Route path="/funcionario/dashboard" element={<FuncionarioDashboard />} />
+            <Route path="/funcionario/agenda" element={<FuncionarioAgenda />} />
+            <Route path="/funcionario/pacientes" element={<FuncionarioPacientes />} />
+            <Route path="/funcionario/financeiro" element={<FuncionarioDashboard />} />
+            <Route path="/funcionario/relatorios" element={<FuncionarioDashboard />} />
+            <Route path="/funcionario/configuracoes" element={<Configuracoes />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

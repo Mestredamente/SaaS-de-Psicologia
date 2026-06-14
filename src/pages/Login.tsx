@@ -75,6 +75,21 @@ export default function Login() {
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+
+          <div className="mt-6 space-y-2 border-t pt-4">
+            <p className="text-xs text-center text-muted-foreground mb-2">Acesso Rápido (Teste)</p>
+            <div className="flex gap-2 flex-wrap justify-center">
+              <Button variant="outline" size="sm" onClick={() => setEmail('ana@psicologa.com')}>
+                Psi Ana
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEmail('fernanda@mentesa.com')}>
+                Sec Fernanda
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEmail('carlos@mentesa.com')}>
+                Adm Carlos
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
