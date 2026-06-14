@@ -7,6 +7,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
   useSidebar,
 } from '@/components/ui/sidebar'
 import {
@@ -20,6 +23,8 @@ import {
   BookHeart,
   Wallet,
   Settings,
+  User,
+  Calendar,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 
@@ -101,28 +106,71 @@ export function AppSidebar({
           </div>
         )}
       </SidebarHeader>
-      <SidebarContent className="px-2 py-4">
-        <SidebarMenu>
-          {navItems.map((item) => {
-            const isActive =
-              location.pathname === item.path ||
-              (item.path !== '/' &&
-                item.path !== '/paciente' &&
-                item.path !== '/clinica' &&
-                location.pathname.startsWith(item.path))
+      <SidebarContent className="px-2 py-4 flex flex-col gap-6">
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navItems.map((item) => {
+                const isActive =
+                  location.pathname === item.path ||
+                  (item.path !== '/' &&
+                    item.path !== '/paciente' &&
+                    item.path !== '/clinica' &&
+                    location.pathname.startsWith(item.path))
 
-            return (
-              <SidebarMenuItem key={item.path}>
-                <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                  <Link to={item.path}>
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          })}
-        </SidebarMenu>
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                      <Link to={item.path}>
+                        <item.icon className="h-5 w-5" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-auto">
+          <SidebarGroupLabel>Trocar de Área</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {!isPatientArea && !isClinicArea ? null : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Área do Psicólogo">
+                    <Link to="/agenda">
+                      <Calendar className="h-5 w-5" />
+                      <span>Área do Psicólogo</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {isClinicArea ? null : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Área da Clínica">
+                    <Link to="/clinica">
+                      <LayoutDashboard className="h-5 w-5" />
+                      <span>Área da Clínica</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {isPatientArea ? null : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Área do Paciente">
+                    <Link to="/paciente">
+                      <User className="h-5 w-5" />
+                      <span>Área do Paciente</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4 border-t">
         <SidebarMenu>

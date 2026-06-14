@@ -56,32 +56,98 @@ export default function Layout() {
         <SidebarProvider className="min-h-0 h-full">
           <AppSidebar isPatientArea={isPatientArea} isClinicArea={isClinicArea} />
           <SidebarInset className="overflow-hidden flex flex-col">
-            <header className="flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 backdrop-blur px-6 sticky top-0 z-20">
-              <SidebarTrigger className="-ml-2" />
-              <div className="flex-1 max-w-md hidden md:block">
+            <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/95 backdrop-blur px-4 md:px-6 sticky top-0 z-20">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="-ml-2" />
+                <div className="flex items-center gap-2 md:hidden">
+                  <div
+                    className={cn(
+                      'w-8 h-8 rounded-md text-white flex items-center justify-center font-bold text-sm',
+                      isClinicArea
+                        ? 'bg-indigo-600'
+                        : isPatientArea
+                          ? 'bg-sky-600'
+                          : 'bg-slate-700',
+                    )}
+                  >
+                    {isClinicArea ? 'C' : isPatientArea ? 'P' : 'Psi'}
+                  </div>
+                  <span className="font-semibold text-sm truncate max-w-[120px]">
+                    {isClinicArea ? 'Clínica' : isPatientArea ? 'Paciente' : 'Psicólogo'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex-1 max-w-md hidden lg:block px-4">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder="Buscar pacientes..."
-                    className="w-full bg-muted/50 pl-9 rounded-full border-none focus-visible:ring-1"
+                    className="w-full bg-muted/50 pl-9 rounded-full border-none focus-visible:ring-1 h-9"
                   />
                 </div>
               </div>
-              <div className="ml-auto flex items-center gap-4">
+
+              <div className="ml-auto flex items-center gap-2 md:gap-4 shrink-0">
+                <div className="hidden md:flex text-sm text-muted-foreground items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-full border border-primary/10">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <span className="whitespace-nowrap">
+                    Você está acessando como:{' '}
+                    <strong className="text-foreground capitalize">{roleDisplay}</strong>
+                  </span>
+                </div>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="hidden md:flex rounded-full gap-2 h-9"
+                    >
+                      Trocar Área
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Alternar Área</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/agenda" className="w-full cursor-pointer flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Área do Psicólogo
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/clinica" className="w-full cursor-pointer flex items-center gap-2">
+                        <LayoutDashboard className="w-4 h-4" />
+                        Área da Clínica
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/paciente"
+                        className="w-full cursor-pointer flex items-center gap-2"
+                      >
+                        <User className="w-4 h-4" />
+                        Área do Paciente
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="relative h-10 w-auto flex items-center gap-3 rounded-full pl-2 pr-4 hover:bg-muted"
+                      className="relative h-9 w-auto flex items-center gap-2 rounded-full pl-1 pr-3 hover:bg-muted"
                     >
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-7 w-7">
                         <AvatarImage src={user?.avatar ? pb.files.getUrl(user, user.avatar) : ''} />
-                        <AvatarFallback className="bg-primary/20 text-primary">
+                        <AvatarFallback className="bg-primary/20 text-primary text-xs">
                           {(user?.nome_completo || user?.name || 'U').charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium hidden md:block">
+                      <span className="text-sm font-medium hidden sm:block truncate max-w-[100px]">
                         {user?.nome_completo || user?.name}
                       </span>
                     </Button>
@@ -101,53 +167,15 @@ export default function Layout() {
               </div>
             </header>
 
-            <div className="flex flex-col sm:flex-row min-h-12 shrink-0 items-start sm:items-center justify-between border-b bg-muted/10 px-6 py-2 gap-3 sticky top-16 z-10 backdrop-blur">
-              <div className="text-sm text-muted-foreground flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-md border border-primary/10">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span>
-                  Você está acessando como:{' '}
-                  <strong className="text-foreground capitalize">{roleDisplay}</strong>
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
-                <Button
-                  variant={isPsychologistArea ? 'secondary' : 'ghost'}
-                  size="sm"
-                  asChild
-                  className="shrink-0"
-                >
-                  <Link to="/agenda">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Área do Psicólogo
-                  </Link>
-                </Button>
-                <Button
-                  variant={isClinicArea ? 'secondary' : 'ghost'}
-                  size="sm"
-                  asChild
-                  className="shrink-0"
-                >
-                  <Link to="/clinica">
-                    <LayoutDashboard className="w-4 h-4 mr-2" />
-                    Área da Clínica
-                  </Link>
-                </Button>
-                <Button
-                  variant={isPatientArea ? 'secondary' : 'ghost'}
-                  size="sm"
-                  asChild
-                  className="shrink-0"
-                >
-                  <Link to="/paciente">
-                    <User className="w-4 h-4 mr-2" />
-                    Área do Paciente
-                  </Link>
-                </Button>
-              </div>
+            <div className="flex md:hidden shrink-0 border-b bg-muted/10 px-4 py-2 text-xs text-muted-foreground items-center gap-2 sticky top-16 z-10 backdrop-blur">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="truncate">
+                Você está acessando como:{' '}
+                <strong className="text-foreground capitalize">{roleDisplay}</strong>
+              </span>
             </div>
 
-            <div className="flex flex-1 flex-col gap-6 p-6 pb-12 overflow-y-auto">
+            <div className="flex flex-1 flex-col gap-6 p-4 md:p-6 pb-12 overflow-y-auto">
               <Outlet />
             </div>
           </SidebarInset>
