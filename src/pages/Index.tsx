@@ -209,11 +209,9 @@ export default function Index() {
                       className="w-full bg-white text-sky-900 hover:bg-sky-50"
                       asChild
                     >
-                      <Link to="/sessoes-online">
-                        <div className="flex items-center justify-center gap-2">
-                          <Video className="w-4 h-4" />
-                          <span>Entrar na Sala</span>
-                        </div>
+                      <Link to="/sessoes-online" className="flex items-center justify-center gap-2">
+                        <Video className="w-4 h-4" />
+                        <span>Entrar na Sala</span>
                       </Link>
                     </Button>
                   ) : (
@@ -231,7 +229,9 @@ export default function Index() {
                     className="w-full bg-transparent border-white/30 text-white hover:bg-white/10"
                     asChild
                   >
-                    <Link to="/agenda">Reagendar</Link>
+                    <Link to="/agenda" className="flex items-center justify-center">
+                      Reagendar
+                    </Link>
                   </Button>
                   <Button
                     variant="outline"
@@ -251,7 +251,9 @@ export default function Index() {
                     className="bg-white text-sky-900 hover:bg-sky-50"
                     asChild
                   >
-                    <Link to="/agenda">Agendar Nova Sessão</Link>
+                    <Link to="/agenda" className="flex items-center justify-center">
+                      Agendar Nova Sessão
+                    </Link>
                   </Button>
                 </div>
               </div>
