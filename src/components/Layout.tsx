@@ -107,7 +107,7 @@ export default function Layout() {
                       <span className="text-sm font-medium hidden md:block">
                         {user?.nome_completo || user?.name}
                       </span>
-                    </Button>{' '}
+                    </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
