@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import {
   Calendar,
   AlertCircle,
@@ -204,16 +205,16 @@ export default function Index() {
 
                 <div className="flex gap-3 pt-2">
                   {nextSession.tipo === 'online' ? (
-                    <Button
-                      variant="secondary"
-                      className="w-full bg-white text-sky-900 hover:bg-sky-50"
-                      asChild
+                    <Link
+                      to="/sessoes-online"
+                      className={cn(
+                        buttonVariants({ variant: 'secondary' }),
+                        'w-full bg-white text-sky-900 hover:bg-sky-50 flex items-center justify-center gap-2',
+                      )}
                     >
-                      <Link to="/sessoes-online" className="flex items-center justify-center gap-2">
-                        <Video className="w-4 h-4" />
-                        <span>Entrar na Sala</span>
-                      </Link>
-                    </Button>
+                      <Video className="w-4 h-4" />
+                      <span>Entrar na Sala</span>
+                    </Link>
                   ) : (
                     <Button
                       variant="secondary"
@@ -224,15 +225,15 @@ export default function Index() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="w-full bg-transparent border-white/30 text-white hover:bg-white/10"
-                    asChild
+                  <Link
+                    to="/agenda"
+                    className={cn(
+                      buttonVariants({ variant: 'outline' }),
+                      'w-full bg-transparent border-white/30 text-white hover:bg-white/10 flex items-center justify-center',
+                    )}
                   >
-                    <Link to="/agenda" className="flex items-center justify-center">
-                      Reagendar
-                    </Link>
-                  </Button>
+                    Reagendar
+                  </Link>
                   <Button
                     variant="outline"
                     className="w-full bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-red-200"
@@ -246,15 +247,15 @@ export default function Index() {
               <div className="py-8 text-center text-sky-100">
                 Você não tem nenhuma sessão agendada.
                 <div className="mt-4">
-                  <Button
-                    variant="secondary"
-                    className="bg-white text-sky-900 hover:bg-sky-50"
-                    asChild
+                  <Link
+                    to="/agenda"
+                    className={cn(
+                      buttonVariants({ variant: 'secondary' }),
+                      'bg-white text-sky-900 hover:bg-sky-50 flex items-center justify-center',
+                    )}
                   >
-                    <Link to="/agenda" className="flex items-center justify-center">
-                      Agendar Nova Sessão
-                    </Link>
-                  </Button>
+                    Agendar Nova Sessão
+                  </Link>
                 </div>
               </div>
             )}
