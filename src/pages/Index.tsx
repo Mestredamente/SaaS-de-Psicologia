@@ -210,7 +210,10 @@ export default function Index() {
                       asChild
                     >
                       <Link to="/sessoes-online">
-                        <Video className="w-4 h-4 mr-2" /> Entrar na Sala
+                        <div className="flex items-center justify-center gap-2">
+                          <Video className="w-4 h-4" />
+                          <span>Entrar na Sala</span>
+                        </div>
                       </Link>
                     </Button>
                   ) : (
@@ -243,8 +246,12 @@ export default function Index() {
               <div className="py-8 text-center text-sky-100">
                 Você não tem nenhuma sessão agendada.
                 <div className="mt-4">
-                  <Button variant="secondary" className="bg-white text-sky-900 hover:bg-sky-50">
-                    Agendar Nova Sessão
+                  <Button
+                    variant="secondary"
+                    className="bg-white text-sky-900 hover:bg-sky-50"
+                    asChild
+                  >
+                    <Link to="/agenda">Agendar Nova Sessão</Link>
                   </Button>
                 </div>
               </div>
