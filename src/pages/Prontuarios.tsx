@@ -38,6 +38,8 @@ export default function Prontuarios() {
 
   const [prontuariosList, setProntuariosList] = useState<any[]>([])
   const [loadingList, setLoadingList] = useState(!id)
+  const [consents, setConsents] = useState<any[]>([])
+  const [activeTerms, setActiveTerms] = useState<any[]>([])
 
   // Editor State
   const [prontuario, setProntuario] = useState<any>(null)
@@ -67,11 +69,35 @@ export default function Prontuarios() {
         sort: '-created',
       })
       setProntuariosList(records)
+
+      const terms = await pb
+        .collection('termos_consentimento')
+        .getFullList({ filter: "status='ativo'" })
+      setActiveTerms(terms)
+      const pacIds = Array.from(new Set(records.map((r) => r.paciente_id)))
+      if (pacIds.length > 0) {
+        const c = await pb.collection('consentimentos_paciente').getFullList({
+          filter: pacIds.map((id) => `paciente_id='${id}'`).join(' || '),
+        })
+        setConsents(c)
+      }
     } catch (error) {
       console.error(error)
     } finally {
       setLoadingList(false)
     }
+  }
+
+  const isCompliant = (pacienteId: string) => {
+    const lgpd = activeTerms.find((t) => t.tipo === 'lgpd_geral')
+    if (!lgpd) return true
+    return consents.some(
+      (c) =>
+        c.paciente_id === pacienteId &&
+        c.termo_id === lgpd.id &&
+        c.versao === lgpd.versao &&
+        c.status === 'aceito',
+    )
   }
 
   const loadProntuario = async (recordId: string) => {
@@ -305,11 +331,18 @@ export default function Prontuarios() {
                         </p>
                       </div>
                     </div>
-                    {p.resumo && (
-                      <Badge variant="secondary" className="bg-teal-50 text-teal-700">
-                        Resumido
-                      </Badge>
-                    )}
+                    <div className="flex gap-2 items-center">
+                      {!isCompliant(p.paciente_id) && (
+                        <Badge variant="destructive" className="text-[10px] px-2 h-5">
+                          LGPD Pendente
+                        </Badge>
+                      )}
+                      {p.resumo && (
+                        <Badge variant="secondary" className="bg-teal-50 text-teal-700">
+                          Resumido
+                        </Badge>
+                      )}
+                    </div>
                   </Link>
                 ))}
               </div>

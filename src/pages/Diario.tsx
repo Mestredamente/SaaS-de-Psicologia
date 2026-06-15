@@ -39,19 +39,20 @@ export default function Diario() {
   })
 
   const load = async () => {
-    const p = await getCurrentPatient()
-    if (!p) return setLoading(false)
-    setPatient(p)
     try {
+      const p = await getCurrentPatient()
+      if (!p) return setLoading(false)
+      setPatient(p)
       const records = await pb.collection('diario_sentimental').getFullList({
         filter: `paciente_id="${p.id}"`,
         sort: '-data',
       })
       setDiarios(records)
-    } catch {
-      /* intentionally ignored */
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   useEffect(() => {

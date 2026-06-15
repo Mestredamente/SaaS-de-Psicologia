@@ -16,6 +16,7 @@ export default function Login() {
   const { toast } = useToast()
 
   if (isAuthenticated && user) {
+    if (user.role === 'admin') return <Navigate to="/admin" replace />
     if (user.role === 'paciente') return <Navigate to="/paciente" replace />
     if (user.role === 'clinica') return <Navigate to="/clinica" replace />
     return <Navigate to="/" replace />
@@ -87,6 +88,9 @@ export default function Login() {
               </Button>
               <Button variant="outline" size="sm" onClick={() => setEmail('carlos@mentesa.com')}>
                 Adm Carlos
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setEmail('admin@mentesa.com')}>
+                Super Admin
               </Button>
             </div>
           </div>
