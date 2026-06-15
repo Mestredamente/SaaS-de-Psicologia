@@ -98,6 +98,8 @@ export function AppSidebar({
 
   let navItems = (permissoesMenu || [])
     .filter((m) => {
+      if (m.visivel === false) return false
+
       if (m.rota.startsWith('/supervisor')) {
         if (!isSupervisor) return false
         if (!isSupervisorArea) return false
@@ -111,21 +113,29 @@ export function AppSidebar({
 
       if (user?.role === 'funcionario') {
         if (m.requer_cargo && m.requer_cargo !== funcionario?.cargo) return false
+
+        if (funcionario?.cargo === 'secretaria') {
+          if (m.rota.includes('/financeiro') || m.rota.includes('/relatorios')) return false
+        }
+
+        if (m.rota.includes('/financeiro') && funcionario?.permissao_financeiro === false)
+          return false
+        if (m.rota.includes('/relatorios') && funcionario?.permissao_relatorios === false)
+          return false
+        if (m.rota.includes('/agenda') && funcionario?.permissao_agenda === false) return false
+        if (m.rota.includes('/pacientes') && funcionario?.permissao_pacientes === false)
+          return false
       }
 
       if (user?.role === 'psicologo') {
         if (isLinked) {
           if (m.rota === '/dashboard/psicologo/autonomo') return false
-          const allowed = [
-            '/dashboard/psicologo/vinculado',
-            '/agenda',
-            '/pacientes',
-            '/prontuarios',
-            '/sessoes-online',
-            '/configuracoes',
-            '/minha-supervisao',
-          ]
-          if (!allowed.includes(m.rota) && !m.rota.startsWith('/supervisor')) return false
+          if (
+            m.rota === '/financeiro' ||
+            m.rota === '/contratos-terapeuticos' ||
+            m.rota === '/planos'
+          )
+            return false
         } else {
           if (m.rota === '/dashboard/psicologo/vinculado') return false
         }
