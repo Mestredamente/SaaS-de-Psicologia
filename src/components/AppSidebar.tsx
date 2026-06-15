@@ -36,72 +36,45 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useFuncionario } from '@/hooks/use-funcionario'
 import { useSupervisao } from '@/hooks/use-supervisao'
 import { useFinanceiroAtrasado } from '@/hooks/use-financeiro'
+import { useEffect, useState } from 'react'
+import pb from '@/lib/pocketbase/client'
 
-const patientNavItems = [
-  { title: 'Dashboard', path: '/paciente', icon: LayoutDashboard },
-  { title: 'Meu Perfil', path: '/paciente/perfil', icon: UserCircle },
-  { title: 'Minha Agenda', path: '/paciente/agenda', icon: CalendarDays },
-  { title: 'Meu Prontuário', path: '/paciente/prontuario', icon: FileText },
-  { title: 'Meu Diário', path: '/paciente/diario', icon: BookHeart },
-  { title: 'Pagamentos', path: '/paciente/pagamentos', icon: DollarSign },
-  { title: 'Sessões Online', path: '/paciente/sessoes-online', icon: Video },
-]
-
-const psychNavItemsBase = [
-  { title: 'Dashboard', path: '/dashboard/psicologo/autonomo', icon: LayoutDashboard },
-  { title: 'Agenda', path: '/agenda', icon: CalendarDays },
-  { title: 'Pacientes', path: '/pacientes', icon: UserCircle },
-  { title: 'Prontuários', path: '/prontuarios', icon: FileText },
-  { title: 'Financeiro', path: '/financeiro', icon: Wallet },
-  { title: 'Relatórios', path: '/relatorios', icon: BarChart2 },
-  { title: 'Sessões Online', path: '/sessoes-online', icon: Video },
-  { title: 'Configurações', path: '/configuracoes', icon: Settings },
-]
-
-const linkedPsychNavItems = [
-  { title: 'Dashboard', path: '/dashboard/psicologo/vinculado', icon: LayoutDashboard },
-  { title: 'Agenda da Clínica', path: '/agenda', icon: CalendarDays },
-  { title: 'Pacientes Atribuídos', path: '/pacientes', icon: UserCircle },
-  { title: 'Prontuários', path: '/prontuarios', icon: FileText },
-  { title: 'Sessões Online', path: '/sessoes-online', icon: Video },
-  { title: 'Configurações', path: '/configuracoes', icon: Settings },
-]
-
-const clinicNavItems = [
-  { title: 'Dashboard', path: '/clinica', icon: LayoutDashboard },
-  { title: 'Psicólogos', path: '/clinica/psicologos', icon: UserCircle },
-  { title: 'Agenda da Clínica', path: '/clinica/agenda', icon: CalendarDays },
-  { title: 'Financeiro', path: '/clinica/financeiro', icon: Wallet },
-  { title: 'Relatórios', path: '/clinica/relatorios', icon: BarChart2 },
-  { title: 'Configurações', path: '/clinica/configuracoes', icon: Settings },
-]
-
-const adminNavItems = [
-  { title: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-  { title: 'Planos', path: '/admin/planos', icon: FileText },
-  { title: 'Assinaturas', path: '/admin/assinaturas', icon: DollarSign },
-  { title: 'Contratos SaaS', path: '/admin/contratos', icon: FileText },
-  { title: 'Usuários', path: '/admin/usuarios', icon: UserCircle },
-  { title: 'Termos LGPD', path: '/admin/termos', icon: ShieldAlert },
-  { title: 'Auditoria', path: '/admin/auditoria', icon: BookOpen },
-  { title: 'Relatórios', path: '/admin/relatorios', icon: FileText },
-  { title: 'Configurações', path: '/admin/configuracoes', icon: Settings },
-]
-
-const supervisorNavItems = [
-  { title: 'Dashboard', path: '/supervisor', icon: LayoutDashboard },
-  { title: 'Meus Supervisandos', path: '/supervisor/supervisandos', icon: Users },
-  { title: 'Sessões', path: '/supervisor/sessoes', icon: CalendarDays },
-  { title: 'Casos', path: '/supervisor/casos', icon: BookOpen },
-  { title: 'Relatórios', path: '/supervisor/relatorios', icon: FileText },
-  { title: 'Configurações', path: '/supervisor/configuracoes', icon: Settings },
-]
-
-const funcionarioBaseNavItems = [
-  { title: 'Dashboard', path: '/funcionario', icon: LayoutDashboard },
-  { title: 'Agenda da Clínica', path: '/funcionario/agenda', icon: CalendarDays },
-  { title: 'Pacientes', path: '/funcionario/pacientes', icon: UserCircle },
-]
+const getIconForMenu = (title: string) => {
+  if (title === 'Financeiro') return Wallet
+  if (title === 'Pagamentos' || title === 'Assinaturas') return DollarSign
+  if (title === 'Meus Supervisandos' || title === 'Funcionários') return Users
+  if (title === 'Relatórios') return BarChart2
+  if (title === 'Meu Diário') return BookHeart
+  if (title === 'Termos LGPD' || title === 'Minha Supervisão') return ShieldAlert
+  if (title === 'Auditoria' || title === 'Casos') return BookOpen
+  if (
+    title === 'Sessões' ||
+    title === 'Agenda da Clínica' ||
+    title === 'Minha Agenda' ||
+    title === 'Agenda'
+  )
+    return CalendarDays
+  if (title.includes('Sessões Online')) return Video
+  if (title === 'Configurações') return Settings
+  if (
+    title === 'Pacientes' ||
+    title === 'Psicólogos' ||
+    title === 'Usuários' ||
+    title === 'Meu Perfil' ||
+    title === 'Pacientes Atribuídos'
+  )
+    return UserCircle
+  if (
+    title === 'Prontuários' ||
+    title === 'Meu Prontuário' ||
+    title === 'Contratos' ||
+    title === 'Contratos SaaS' ||
+    title === 'Planos'
+  )
+    return FileText
+  if (title.includes('Dashboard')) return LayoutDashboard
+  return LayoutDashboard
+}
 
 export function AppSidebar({
   isPatientArea,
@@ -119,40 +92,77 @@ export function AppSidebar({
   const { funcionario } = useFuncionario()
   const { isSupervisor, isSupervisando } = useSupervisao()
   const location = useLocation()
-  const { signOut, perfil } = useAuth()
+  const { user, signOut, perfil } = useAuth()
   const { state } = useSidebar()
   const { hasAtrasado } = useFinanceiroAtrasado()
 
+  const [dbMenus, setDbMenus] = useState<any[]>([])
+
+  useEffect(() => {
+    if (!user?.role) return
+    pb.collection('permissoes_menu')
+      .getFullList({
+        filter: `role = '${user.role}' && visivel = true`,
+        sort: 'created',
+      })
+      .then((res) => setDbMenus(res))
+      .catch(console.error)
+  }, [user?.role])
+
   const isLinked = !!perfil?.clinica_id
 
-  let navItems = isAdminArea
-    ? adminNavItems
-    : isClinicArea
-      ? clinicNavItems
-      : isPatientArea
-        ? patientNavItems
-        : isSupervisorArea
-          ? supervisorNavItems
-          : isLinked
-            ? linkedPsychNavItems
-            : psychNavItemsBase
+  let navItems = dbMenus
+    .filter((m) => {
+      if (m.rota.startsWith('/supervisor')) {
+        if (!isSupervisor) return false
+        if (!isSupervisorArea) return false
+      } else {
+        if (isSupervisorArea && user?.role === 'psicologo') return false
+      }
 
-  if (!isAdminArea && !isClinicArea && !isFuncionarioArea && !isPatientArea && !isSupervisorArea) {
-    navItems = isLinked ? [...linkedPsychNavItems] : [...psychNavItemsBase]
-    if (isSupervisando) {
-      navItems.push({ title: 'Minha Supervisão', path: '/minha-supervisao', icon: ShieldAlert })
-    }
-  }
+      if (m.rota === '/minha-supervisao') {
+        if (!isSupervisando) return false
+      }
 
-  if (isFuncionarioArea) {
-    navItems = [...funcionarioBaseNavItems]
-    if (funcionario?.permissao_financeiro) {
-      navItems.push({ title: 'Financeiro', path: '/funcionario/financeiro', icon: Wallet })
-    }
-    if (funcionario?.permissao_relatorios) {
-      navItems.push({ title: 'Relatórios', path: '/funcionario/relatorios', icon: FileText })
-    }
-    navItems.push({ title: 'Configurações', path: '/funcionario/configuracoes', icon: Settings })
+      if (user?.role === 'funcionario') {
+        if (m.requer_cargo && m.requer_cargo !== funcionario?.cargo) return false
+      }
+
+      if (user?.role === 'psicologo') {
+        if (isLinked) {
+          if (m.rota === '/dashboard/psicologo/autonomo') return false
+          const allowed = [
+            '/dashboard/psicologo/vinculado',
+            '/agenda',
+            '/pacientes',
+            '/prontuarios',
+            '/sessoes-online',
+            '/configuracoes',
+            '/minha-supervisao',
+          ]
+          if (!allowed.includes(m.rota) && !m.rota.startsWith('/supervisor')) return false
+        } else {
+          if (m.rota === '/dashboard/psicologo/vinculado') return false
+        }
+      }
+
+      return true
+    })
+    .map((m) => {
+      let title = m.item_menu
+      if (user?.role === 'psicologo' && isLinked) {
+        if (m.rota === '/agenda') title = 'Agenda da Clínica'
+        if (m.rota === '/pacientes') title = 'Pacientes Atribuídos'
+      }
+      return {
+        title,
+        path: m.rota,
+        icon: getIconForMenu(title),
+      }
+    })
+
+  if (navItems.length === 0 && user?.role) {
+    navItems = [{ title: 'Carregando...', path: '#', icon: LayoutDashboard }]
   }
 
   const getHeaderStyle = () => {
@@ -268,82 +278,43 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <Collapsible className="group/collapsible mt-auto">
-          <SidebarGroup>
-            <SidebarGroupLabel asChild>
-              <CollapsibleTrigger>
-                Trocar de Área
-                <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
-              </CollapsibleTrigger>
-            </SidebarGroupLabel>
-            <CollapsibleContent>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {!isPatientArea && !isClinicArea && !isSupervisorArea ? null : (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild tooltip="Área do Psicólogo">
-                        <Link to="/agenda">
-                          <Calendar className="h-5 w-5" />
-                          <span>Área do Psicólogo</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {isSupervisor && !isSupervisorArea ? (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild tooltip="Área do Supervisor">
-                        <Link to="/supervisor">
-                          <ShieldAlert className="h-5 w-5" />
-                          <span>Área do Supervisor</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ) : null}
-                  {!isClinicArea && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild tooltip="Área da Clínica">
-                        <Link to="/clinica">
-                          <LayoutDashboard className="h-5 w-5" />
-                          <span>Área da Clínica</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {!isPatientArea && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild tooltip="Área do Paciente">
-                        <Link to="/paciente">
-                          <User className="h-5 w-5" />
-                          <span>Área do Paciente</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {!isFuncionarioArea && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild tooltip="Área do Funcionário">
-                        <Link to="/funcionario">
-                          <LayoutDashboard className="h-5 w-5" />
-                          <span>Área do Funcionário</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {!isAdminArea && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild tooltip="Área do Admin">
-                        <Link to="/admin">
-                          <Settings className="h-5 w-5" />
-                          <span>Área do Admin</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </CollapsibleContent>
-          </SidebarGroup>
-        </Collapsible>
+        {user?.role === 'psicologo' && isSupervisor && (
+          <Collapsible className="group/collapsible mt-auto">
+            <SidebarGroup>
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger>
+                  Trocar de Área
+                  <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {!isSupervisorArea ? (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Área do Supervisor">
+                          <Link to="/supervisor">
+                            <ShieldAlert className="h-5 w-5" />
+                            <span>Área do Supervisor</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ) : (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Área do Psicólogo">
+                          <Link to="/agenda">
+                            <Calendar className="h-5 w-5" />
+                            <span>Área do Psicólogo</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        )}
       </SidebarContent>
       <SidebarFooter className="p-4 border-t">
         <SidebarMenu>

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-15T16:17:54.938Z",
+  "generatedAt": "2026-06-15T16:26:26.269Z",
   "collections": [
     {
       "name": "users",
@@ -2426,6 +2426,66 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_notificacoes_usuario ON notificacoes (usuario_id, status)"]
+    },
+    {
+      "name": "permissoes_menu",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.role = 'admin'",
+        "update": "@request.auth.role = 'admin'",
+        "delete": "@request.auth.role = 'admin'"
+      },
+      "fields": [
+        {
+          "name": "role",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["psicologo", "clinica", "paciente", "funcionario", "admin"]
+        },
+        {
+          "name": "item_menu",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "rota",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "requer_cargo",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["secretaria", "administrativo", "rh"]
+        },
+        {
+          "name": "visivel",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": []
     }
   ]
 }
