@@ -19,7 +19,8 @@ export default function Login() {
     if (user.role === 'admin') return <Navigate to="/admin" replace />
     if (user.role === 'paciente') return <Navigate to="/paciente" replace />
     if (user.role === 'clinica') return <Navigate to="/clinica" replace />
-    return <Navigate to="/" replace />
+    if (user.role === 'funcionario') return <Navigate to="/funcionario" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

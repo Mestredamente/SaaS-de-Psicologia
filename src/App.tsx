@@ -48,6 +48,9 @@ import AdminUsuarios from '@/pages/admin/Usuarios'
 import AdminTermos from '@/pages/admin/Termos'
 import AdminAuditoria from '@/pages/admin/Auditoria'
 import Notificacoes from '@/pages/Notificacoes'
+import DashboardRouter from '@/pages/psicologo/DashboardRouter'
+import DashboardAutonomo from '@/pages/psicologo/DashboardAutonomo'
+import DashboardVinculado from '@/pages/psicologo/DashboardVinculado'
 
 const TitleUpdater = () => {
   const location = useLocation()
@@ -91,6 +94,9 @@ const AppRoutes = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/manutencao" element={<Maintenance />} />
         <Route element={<Layout />}>
+          <Route path="/dashboard" element={<DashboardRouter />} />
+          <Route path="/dashboard/psicologo/autonomo" element={<DashboardAutonomo />} />
+          <Route path="/dashboard/psicologo/vinculado" element={<DashboardVinculado />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="/prontuarios" element={<Prontuarios />} />

@@ -1,7 +1,27 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Users, Calendar as CalendarIcon, DollarSign, Activity, Plus } from 'lucide-react'
+import {
+  Users,
+  Calendar as CalendarIcon,
+  DollarSign,
+  Activity,
+  Plus,
+  Copy,
+  CheckCircle2,
+  UserMinus,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import pb from '@/lib/pocketbase/client'
 import { fetchClinicDashboardData } from '@/services/clinic'
 import { format, isToday, isThisMonth, isAfter, startOfDay, subDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -34,9 +54,11 @@ const chartConfig = {
 export default function ClinicaDashboard() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [inviteModalOpen, setInviteModalOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   const { toast } = useToast()
 
-  useEffect(() => {
+  const loadData = () => {
     fetchClinicDashboardData()
       .then(setData)
       .catch((err) => {
@@ -48,7 +70,35 @@ export default function ClinicaDashboard() {
         })
       })
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadData()
   }, [toast])
+
+  const copyInviteCode = () => {
+    if (data?.clinica?.id) {
+      navigator.clipboard.writeText(data.clinica.id)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+      toast({
+        title: 'Copiado!',
+        description: 'Código de convite copiado para a área de transferência.',
+      })
+    }
+  }
+
+  const unlinkPsychologist = async (vinculoId: string, psiId: string) => {
+    if (!confirm('Tem certeza que deseja desvincular este psicólogo da clínica?')) return
+    try {
+      await pb.collection('psicologos_clinica').update(vinculoId, { status: 'inativo' })
+      await pb.collection('perfis_psicologos').update(psiId, { clinica_id: null })
+      toast({ title: 'Sucesso', description: 'Psicólogo desvinculado com sucesso.' })
+      loadData()
+    } catch (e) {
+      toast({ title: 'Erro', description: 'Falha ao desvincular', variant: 'destructive' })
+    }
+  }
 
   if (loading)
     return <div className="flex p-8 justify-center items-center h-full">Carregando painel...</div>
@@ -115,6 +165,7 @@ export default function ClinicaDashboard() {
 
       return {
         ...psi,
+        vinculoId: vinculo.id,
         weeklySessions,
         isOnline: Math.random() > 0.3,
       }
@@ -129,11 +180,44 @@ export default function ClinicaDashboard() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">Painel da Clínica</h1>
           <p className="text-muted-foreground mt-1">Bem-vindo, {clinica.nome_fantasia}</p>
         </div>
-        <Button className="bg-indigo-600 hover:bg-indigo-700">
+        <Button
+          className="bg-indigo-600 hover:bg-indigo-700"
+          onClick={() => setInviteModalOpen(true)}
+        >
           <Plus className="mr-2 h-4 w-4" />
-          Adicionar novo psicólogo
+          Convidar Psicólogo
         </Button>
       </div>
+
+      <Dialog open={inviteModalOpen} onOpenChange={setInviteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convidar Psicólogo para a Clínica</DialogTitle>
+            <DialogDescription>
+              Compartilhe o código abaixo com o psicólogo. Ele deverá inseri-lo no momento do
+              cadastro ou no primeiro acesso.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Código de Convite (ID da Clínica)</Label>
+              <div className="flex items-center gap-2">
+                <Input value={clinica.id} readOnly className="font-mono bg-slate-50" />
+                <Button variant="outline" size="icon" onClick={copyInviteCode}>
+                  {copied ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setInviteModalOpen(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="shadow-sm border-indigo-100">
@@ -258,9 +342,19 @@ export default function ClinicaDashboard() {
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-slate-900">{psi.weeklySessions}</div>
-                    <div className="text-xs text-muted-foreground">sessões</div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-slate-900">{psi.weeklySessions}</div>
+                      <div className="text-xs text-muted-foreground">sessões</div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-slate-400 hover:text-red-500"
+                      onClick={() => unlinkPsychologist(psi.vinculoId, psi.id)}
+                    >
+                      <UserMinus className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}

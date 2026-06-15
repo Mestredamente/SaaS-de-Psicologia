@@ -39,7 +39,7 @@ export default function Landing() {
     if (role === 'paciente') return <Navigate to="/paciente" replace />
     if (role === 'clinica') return <Navigate to="/clinica" replace />
     if (role === 'funcionario') return <Navigate to="/funcionario" replace />
-    return <Navigate to="/agenda" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   const features = [

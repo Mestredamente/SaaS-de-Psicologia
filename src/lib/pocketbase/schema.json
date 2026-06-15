@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-15T01:14:45.411Z",
+  "generatedAt": "2026-06-15T16:17:54.938Z",
   "collections": [
     {
       "name": "users",
@@ -246,6 +246,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "clinica_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "clinicas"
         }
       ],
       "indexes": []
@@ -1514,6 +1521,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "modo_contratacao",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["autonomo", "clinica"]
         }
       ],
       "indexes": []
@@ -1582,6 +1596,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "modo_contratacao",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["autonomo", "clinica"]
         }
       ],
       "indexes": []
@@ -1637,6 +1658,13 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "modo_contratacao",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["autonomo", "clinica"]
         }
       ],
       "indexes": []

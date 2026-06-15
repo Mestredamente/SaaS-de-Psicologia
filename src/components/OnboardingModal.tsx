@@ -18,14 +18,22 @@ import {
   Settings,
   ShieldCheck,
   Stethoscope,
+  Building2,
+  Briefcase,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import pb from '@/lib/pocketbase/client'
+import { Input } from '@/components/ui/input'
+import { useToast } from '@/hooks/use-toast'
 
 export function OnboardingModal() {
-  const { user } = useAuth()
+  const { user, perfil } = useAuth()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [modo, setModo] = useState<'autonomo' | 'clinica' | null>(null)
+  const [codigoClinica, setCodigoClinica] = useState('')
+  const { toast } = useToast()
 
   useEffect(() => {
     if (user && user.onboarding_completed === false) {
@@ -43,16 +51,16 @@ export function OnboardingModal() {
           description:
             'Siga estes passos para configurar seu consultório e começar a atender com mais facilidade.',
           steps: [
+            {
+              title: 'Modo de Trabalho',
+              desc: 'Escolha como você vai atuar no sistema.',
+              icon: Briefcase,
+            },
             { title: 'Complete seu perfil', desc: 'Adicione suas informações e foto.', icon: User },
             {
-              title: 'Cadastre seu paciente',
-              desc: 'Insira os dados básicos e envie o contrato.',
+              title: 'Pronto para começar',
+              desc: 'Tudo configurado para seus atendimentos.',
               icon: Stethoscope,
-            },
-            {
-              title: 'Agende a primeira sessão',
-              desc: 'Organize sua agenda integrada ao calendário.',
-              icon: Calendar,
             },
           ],
         }
@@ -146,7 +154,54 @@ export function OnboardingModal() {
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (user?.role === 'psicologo' && step === 0) {
+      if (!modo) {
+        toast({
+          title: 'Atenção',
+          description: 'Escolha um modo de trabalho.',
+          variant: 'destructive',
+        })
+        return
+      }
+      if (modo === 'clinica') {
+        if (!codigoClinica) {
+          toast({
+            title: 'Atenção',
+            description: 'Insira o código da clínica.',
+            variant: 'destructive',
+          })
+          return
+        }
+        setSaving(true)
+        try {
+          const clinica = await pb.collection('clinicas').getOne(codigoClinica)
+          if (perfil) {
+            await pb.collection('perfis_psicologos').update(perfil.id, { clinica_id: clinica.id })
+            try {
+              await pb.collection('psicologos_clinica').create({
+                clinica_id: clinica.id,
+                psicologo_id: perfil.id,
+                status: 'ativo',
+              })
+            } catch {
+              /* intentionally ignored */
+            }
+          }
+          toast({ title: 'Sucesso', description: 'Vinculado à clínica ' + clinica.nome_fantasia })
+        } catch (e) {
+          toast({
+            title: 'Erro',
+            description: 'Código de clínica inválido.',
+            variant: 'destructive',
+          })
+          setSaving(false)
+          return
+        }
+        setSaving(false)
+      }
+    }
+
     if (step < roleInfo.steps.length - 1) {
       setStep((s) => s + 1)
     } else {
@@ -174,46 +229,100 @@ export function OnboardingModal() {
               const isActive = i === step
               const isCompleted = i < step
               return (
-                <div
-                  key={i}
-                  className={cn(
-                    'flex items-start gap-4 p-4 rounded-xl border transition-all duration-300',
-                    isActive
-                      ? 'border-primary/50 bg-primary/5 shadow-sm'
-                      : 'border-transparent opacity-60',
-                    isCompleted && 'opacity-100',
-                  )}
-                >
+                <div key={i} className="flex flex-col gap-3">
                   <div
                     className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors',
-                      isCompleted
-                        ? 'bg-green-100 text-green-600'
-                        : isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-slate-100 text-slate-400',
+                      'flex items-start gap-4 p-4 rounded-xl border transition-all duration-300',
+                      isActive
+                        ? 'border-primary/50 bg-primary/5 shadow-sm'
+                        : 'border-transparent opacity-60',
+                      isCompleted && 'opacity-100',
                     )}
                   >
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : (
-                      <Icon className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="flex-1 pt-1">
-                    <h4
+                    <div
                       className={cn(
-                        'font-medium transition-colors',
-                        isActive && 'text-primary',
-                        isCompleted && 'text-green-700',
+                        'w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors',
+                        isCompleted
+                          ? 'bg-green-100 text-green-600'
+                          : isActive
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-slate-100 text-slate-400',
                       )}
                     >
-                      {s.title}
-                    </h4>
-                    {(isActive || isCompleted) && (
-                      <p className="text-sm text-muted-foreground mt-1 animate-fade-in">{s.desc}</p>
-                    )}
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-5 h-5" />
+                      ) : (
+                        <Icon className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="flex-1 pt-1">
+                      <h4
+                        className={cn(
+                          'font-medium transition-colors',
+                          isActive && 'text-primary',
+                          isCompleted && 'text-green-700',
+                        )}
+                      >
+                        {s.title}
+                      </h4>
+                      {(isActive || isCompleted) && (
+                        <p className="text-sm text-muted-foreground mt-1 animate-fade-in">
+                          {s.desc}
+                        </p>
+                      )}
+                    </div>
                   </div>
+
+                  {isActive && i === 0 && user.role === 'psicologo' && (
+                    <div className="pl-14 pr-4 space-y-4 animate-fade-in">
+                      <div className="grid grid-cols-2 gap-4">
+                        <button
+                          onClick={() => setModo('autonomo')}
+                          className={cn(
+                            'flex flex-col items-center p-4 border rounded-xl hover:border-primary/50 transition-colors',
+                            modo === 'autonomo' &&
+                              'border-primary bg-primary/5 ring-1 ring-primary/20',
+                          )}
+                        >
+                          <User className="w-8 h-8 mb-2 text-blue-600" />
+                          <span className="font-medium text-slate-900">Autônomo</span>
+                          <span className="text-xs text-slate-500 mt-1">
+                            Atendo por conta própria
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => setModo('clinica')}
+                          className={cn(
+                            'flex flex-col items-center p-4 border rounded-xl hover:border-primary/50 transition-colors',
+                            modo === 'clinica' &&
+                              'border-primary bg-primary/5 ring-1 ring-primary/20',
+                          )}
+                        >
+                          <Building2 className="w-8 h-8 mb-2 text-indigo-600" />
+                          <span className="font-medium text-slate-900">Vinculado a Clínica</span>
+                          <span className="text-xs text-slate-500 mt-1">
+                            Tenho um código de convite
+                          </span>
+                        </button>
+                      </div>
+
+                      {modo === 'clinica' && (
+                        <div className="mt-4 animate-fade-in">
+                          <label className="text-sm font-medium mb-1.5 block text-slate-700">
+                            Código da Clínica
+                          </label>
+                          <Input
+                            placeholder="Insira o ID da Clínica"
+                            value={codigoClinica}
+                            onChange={(e) => setCodigoClinica(e.target.value)}
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            Peça este código ao administrador da clínica.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}

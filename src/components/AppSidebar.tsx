@@ -48,12 +48,23 @@ const patientNavItems = [
 ]
 
 const psychNavItemsBase = [
-  { title: 'Dashboard', path: '/', icon: LayoutDashboard },
+  { title: 'Dashboard', path: '/dashboard/psicologo/autonomo', icon: LayoutDashboard },
   { title: 'Agenda', path: '/agenda', icon: CalendarDays },
+  { title: 'Pacientes', path: '/pacientes', icon: UserCircle },
   { title: 'Prontuários', path: '/prontuarios', icon: FileText },
   { title: 'Financeiro', path: '/financeiro', icon: Wallet },
   { title: 'Relatórios', path: '/relatorios', icon: BarChart2 },
   { title: 'Sessões Online', path: '/sessoes-online', icon: Video },
+  { title: 'Configurações', path: '/configuracoes', icon: Settings },
+]
+
+const linkedPsychNavItems = [
+  { title: 'Dashboard', path: '/dashboard/psicologo/vinculado', icon: LayoutDashboard },
+  { title: 'Agenda da Clínica', path: '/agenda', icon: CalendarDays },
+  { title: 'Pacientes Atribuídos', path: '/pacientes', icon: UserCircle },
+  { title: 'Prontuários', path: '/prontuarios', icon: FileText },
+  { title: 'Sessões Online', path: '/sessoes-online', icon: Video },
+  { title: 'Configurações', path: '/configuracoes', icon: Settings },
 ]
 
 const clinicNavItems = [
@@ -108,9 +119,11 @@ export function AppSidebar({
   const { funcionario } = useFuncionario()
   const { isSupervisor, isSupervisando } = useSupervisao()
   const location = useLocation()
-  const { signOut } = useAuth()
+  const { signOut, perfil } = useAuth()
   const { state } = useSidebar()
   const { hasAtrasado } = useFinanceiroAtrasado()
+
+  const isLinked = !!perfil?.clinica_id
 
   let navItems = isAdminArea
     ? adminNavItems
@@ -120,10 +133,12 @@ export function AppSidebar({
         ? patientNavItems
         : isSupervisorArea
           ? supervisorNavItems
-          : psychNavItemsBase
+          : isLinked
+            ? linkedPsychNavItems
+            : psychNavItemsBase
 
   if (!isAdminArea && !isClinicArea && !isFuncionarioArea && !isPatientArea && !isSupervisorArea) {
-    navItems = [...psychNavItemsBase]
+    navItems = isLinked ? [...linkedPsychNavItems] : [...psychNavItemsBase]
     if (isSupervisando) {
       navItems.push({ title: 'Minha Supervisão', path: '/minha-supervisao', icon: ShieldAlert })
     }
