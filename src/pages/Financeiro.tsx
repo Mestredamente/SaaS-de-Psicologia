@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { Wallet } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
 import { ResumoCards } from './financeiro/ResumoCards'
 import { LancamentosList } from './financeiro/LancamentosList'
 import { RelatoriosFinanceiros } from './financeiro/RelatoriosFinanceiros'
@@ -32,29 +34,39 @@ export default function Financeiro() {
         </Button>
       </div>
 
-      <Tabs defaultValue="resumo" className="space-y-6">
-        <TabsList className="bg-slate-100/80">
-          <TabsTrigger value="resumo">Resumo</TabsTrigger>
-          <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
-          <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
-        </TabsList>
+      {!loading && data?.length === 0 ? (
+        <EmptyState
+          icon={Wallet}
+          title="Registre sua primeira receita."
+          description="Você ainda não possui movimentações financeiras registradas no sistema."
+          actionLabel="Novo lançamento"
+          onAction={() => setFormOpen(true)}
+        />
+      ) : (
+        <Tabs defaultValue="resumo" className="space-y-6">
+          <TabsList className="bg-slate-100/80">
+            <TabsTrigger value="resumo">Resumo</TabsTrigger>
+            <TabsTrigger value="lancamentos">Lançamentos</TabsTrigger>
+            <TabsTrigger value="relatorios">Relatórios</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="resumo" className="space-y-8 animate-fade-in-up">
-          <ResumoCards data={data} loading={loading} />
-          <div>
-            <h2 className="text-xl font-semibold mb-4 text-slate-800">Próximos Vencimentos</h2>
-            <LancamentosList data={data} loading={loading} limit={5} hideFilters />
-          </div>
-        </TabsContent>
+          <TabsContent value="resumo" className="space-y-8 animate-fade-in-up">
+            <ResumoCards data={data} loading={loading} />
+            <div>
+              <h2 className="text-xl font-semibold mb-4 text-slate-800">Próximos Vencimentos</h2>
+              <LancamentosList data={data} loading={loading} limit={5} hideFilters />
+            </div>
+          </TabsContent>
 
-        <TabsContent value="lancamentos" className="animate-fade-in-up">
-          <LancamentosList data={data} loading={loading} />
-        </TabsContent>
+          <TabsContent value="lancamentos" className="animate-fade-in-up">
+            <LancamentosList data={data} loading={loading} />
+          </TabsContent>
 
-        <TabsContent value="relatorios" className="animate-fade-in-up">
-          <RelatoriosFinanceiros data={data} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="relatorios" className="animate-fade-in-up">
+            <RelatoriosFinanceiros data={data} />
+          </TabsContent>
+        </Tabs>
+      )}
 
       <FinanceiroFormModal open={formOpen} onOpenChange={setFormOpen} />
     </div>

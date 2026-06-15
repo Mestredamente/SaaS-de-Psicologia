@@ -25,7 +25,9 @@ import pb from '@/lib/pocketbase/client'
 import { getCurrentPatient } from '@/services/patientDashboard'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
-import { Plus } from 'lucide-react'
+import { Plus, Calendar as CalendarIcon, HelpCircle } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 export default function Agenda() {
   const { user } = useAuth()
@@ -119,7 +121,7 @@ export default function Agenda() {
     if (!editData) return
     setSaving(true)
     try {
-      const isoDate = new Date(`${editData.date}T${editData.time}:00`).toISOString()
+      const isoDate = new Date(`${editData.date}T${editData.time}`).toISOString()
       const dataHoraFinal = isoDate.replace('T', ' ').substring(0, 19) + 'Z'
       const data = {
         paciente_id: editData.paciente_id,
@@ -255,7 +257,26 @@ export default function Agenda() {
       <Card className="border-none shadow-sm">
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="p-12 text-center text-muted-foreground">Nenhuma sessão neste mês.</div>
+            <EmptyState
+              icon={CalendarIcon}
+              title="Sua agenda está livre."
+              description="Você não possui nenhuma sessão agendada para este mês."
+              actionLabel={isPsychologist ? 'Agendar primeira sessão' : undefined}
+              onAction={
+                isPsychologist
+                  ? () =>
+                      setEditData({
+                        date: format(new Date(), 'yyyy-MM-dd'),
+                        time: '09:00',
+                        tipo: 'online',
+                        status: 'agendado',
+                        paciente_id: '',
+                        syncGoogle: syncSettings?.auto_sync_novos || false,
+                        sendWhatsapp: false,
+                      })
+                  : undefined
+              }
+            />
           ) : (
             <div className="divide-y">
               {filtered.map((a) => (
@@ -425,7 +446,19 @@ export default function Agenda() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Tipo</Label>
+                    <Label className="flex items-center gap-2">
+                      Tipo
+                      {editData.tipo === 'online' && (
+                        <Tooltip>
+                          <TooltipTrigger type="button" tabIndex={-1}>
+                            <HelpCircle className="w-4 h-4 text-slate-400" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Requer câmera e microfone habilitados no navegador</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </Label>
                     <Select
                       value={editData.tipo}
                       onValueChange={(v) => setEditData((p: any) => ({ ...p, tipo: v }))}

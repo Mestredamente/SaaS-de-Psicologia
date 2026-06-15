@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
+import { HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import {
@@ -167,7 +169,17 @@ Assinatura do Psicólogo(a): _____________________________`
           </div>
 
           <div className="space-y-2">
-            <Label>Conteúdo do Contrato (Modelo Editável)</Label>
+            <Label className="flex items-center gap-2">
+              Conteúdo do Contrato (Modelo Editável)
+              <Tooltip>
+                <TooltipTrigger type="button" tabIndex={-1}>
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>O paciente precisa aceitar para prosseguir conforme a LGPD</p>
+                </TooltipContent>
+              </Tooltip>
+            </Label>
             <Textarea
               className="min-h-[500px] font-serif leading-relaxed text-sm md:text-base p-4"
               value={conteudo}

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Video, Calendar, Clock } from 'lucide-react'
+import { Video, Calendar, Clock, HelpCircle } from 'lucide-react'
+import { EmptyState } from '@/components/EmptyState'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { format, parseISO, startOfDay, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import pb from '@/lib/pocketbase/client'
@@ -88,9 +90,11 @@ function PsychSessoes({ user }: { user: any }) {
         </CardHeader>
         <CardContent className="p-0">
           {sessions.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              Nenhuma sessão online agendada para os próximos 7 dias.
-            </div>
+            <EmptyState
+              icon={Video}
+              title="Sua agenda está livre."
+              description="Nenhuma sessão online agendada para os próximos 7 dias."
+            />
           ) : (
             <div className="divide-y">
               {sessions.map((s) => (
@@ -213,13 +217,25 @@ function PatientSessoes({ user }: { user: any }) {
                   </div>
                 </div>
 
-                <Button
-                  size="lg"
-                  onClick={() => enterRoom(nextSession, 'paciente', navigate)}
-                  className="w-full sm:w-auto bg-blue-500 hover:bg-blue-400 text-white font-bold text-lg h-14 px-8 shadow-lg shadow-blue-500/20"
-                >
-                  Entrar na Sala
-                </Button>
+                <div className="flex items-center gap-4">
+                  <Button
+                    size="lg"
+                    onClick={() => enterRoom(nextSession, 'paciente', navigate)}
+                    className="w-full sm:w-auto bg-blue-500 hover:bg-blue-400 text-white font-bold text-lg h-14 px-8 shadow-lg shadow-blue-500/20"
+                  >
+                    Entrar na Sala
+                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger type="button" tabIndex={-1}>
+                      <HelpCircle className="w-6 h-6 text-blue-300 hover:text-white transition-colors" />
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-white text-slate-800 border-none shadow-xl">
+                      <p className="font-medium">
+                        Requer câmera e microfone habilitados no navegador
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             ) : (
               <div className="py-8">
