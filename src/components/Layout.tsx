@@ -6,6 +6,7 @@ import { ComplianceAlert } from './ComplianceAlert'
 import { PatientConsentModal } from './PatientConsentModal'
 import { NotificationHeader } from './NotificationHeader'
 import { OnboardingModal } from './OnboardingModal'
+import { SimulationBanner } from './SimulationBanner'
 
 export default function Layout() {
   const { isAuthenticated, loading } = useAuth()
@@ -30,7 +31,8 @@ export default function Layout() {
           isAdminArea={isAdminArea}
           isSupervisorArea={isSupervisorArea}
         />
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
+        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 relative">
+          <SimulationBanner />
           <header className="h-16 flex items-center justify-between px-4 border-b bg-white shrink-0">
             <SidebarTrigger />
             <NotificationHeader />

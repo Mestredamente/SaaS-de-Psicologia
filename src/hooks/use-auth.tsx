@@ -80,6 +80,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const signOut = () => {
+    localStorage.removeItem('admin_auth_simulation')
+    localStorage.removeItem('sim_id')
     pb.authStore.clear()
   }
 

@@ -47,6 +47,7 @@ import AdminContratosSaas from '@/pages/admin/ContratosSaas'
 import AdminUsuarios from '@/pages/admin/Usuarios'
 import AdminTermos from '@/pages/admin/Termos'
 import AdminAuditoria from '@/pages/admin/Auditoria'
+import AdminVisaoUsuario from '@/pages/admin/VisaoUsuario'
 import Notificacoes from '@/pages/Notificacoes'
 import DashboardRouter from '@/pages/psicologo/DashboardRouter'
 import DashboardAutonomo from '@/pages/psicologo/DashboardAutonomo'
@@ -153,6 +154,7 @@ const AppRoutes = () => {
           <Route path="/admin/usuarios" element={<AdminUsuarios />} />
           <Route path="/admin/termos" element={<AdminTermos />} />
           <Route path="/admin/auditoria" element={<AdminAuditoria />} />
+          <Route path="/admin/visao-usuario" element={<AdminVisaoUsuario />} />
           <Route path="/admin/relatorios" element={<AdminDashboard />} />
           <Route path="/admin/configuracoes" element={<AdminDashboard />} />
         </Route>
