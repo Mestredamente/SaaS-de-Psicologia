@@ -36,8 +36,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useFuncionario } from '@/hooks/use-funcionario'
 import { useSupervisao } from '@/hooks/use-supervisao'
 import { useFinanceiroAtrasado } from '@/hooks/use-financeiro'
-import { useEffect, useState } from 'react'
-import pb from '@/lib/pocketbase/client'
 
 const getIconForMenu = (title: string) => {
   if (title === 'Financeiro') return Wallet
@@ -92,26 +90,13 @@ export function AppSidebar({
   const { funcionario } = useFuncionario()
   const { isSupervisor, isSupervisando } = useSupervisao()
   const location = useLocation()
-  const { user, signOut, perfil } = useAuth()
+  const { user, signOut, perfil, permissoesMenu } = useAuth()
   const { state } = useSidebar()
   const { hasAtrasado } = useFinanceiroAtrasado()
 
-  const [dbMenus, setDbMenus] = useState<any[]>([])
-
-  useEffect(() => {
-    if (!user?.role) return
-    pb.collection('permissoes_menu')
-      .getFullList({
-        filter: `role = '${user.role}' && visivel = true`,
-        sort: 'created',
-      })
-      .then((res) => setDbMenus(res))
-      .catch(console.error)
-  }, [user?.role])
-
   const isLinked = !!perfil?.clinica_id
 
-  let navItems = dbMenus
+  let navItems = (permissoesMenu || [])
     .filter((m) => {
       if (m.rota.startsWith('/supervisor')) {
         if (!isSupervisor) return false

@@ -1,19 +1,16 @@
-import { Outlet, useLocation, Navigate } from 'react-router-dom'
-import { AppSidebar } from './AppSidebar'
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Outlet, useLocation } from 'react-router-dom'
+import { AppSidebar } from '@/components/AppSidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import { SimulationBanner } from '@/components/SimulationBanner'
 import { useAuth } from '@/hooks/use-auth'
-import { ComplianceAlert } from './ComplianceAlert'
-import { PatientConsentModal } from './PatientConsentModal'
-import { NotificationHeader } from './NotificationHeader'
-import { OnboardingModal } from './OnboardingModal'
-import { SimulationBanner } from './SimulationBanner'
 
 export default function Layout() {
-  const { isAuthenticated, loading } = useAuth()
+  const { loading, user } = useAuth()
   const location = useLocation()
 
-  if (loading) return null
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (loading) {
+    return null
+  }
 
   const isPatientArea = location.pathname.startsWith('/paciente')
   const isClinicArea = location.pathname.startsWith('/clinica')
@@ -23,31 +20,26 @@ export default function Layout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar
-          isPatientArea={isPatientArea}
-          isClinicArea={isClinicArea}
-          isFuncionarioArea={isFuncionarioArea}
-          isAdminArea={isAdminArea}
-          isSupervisorArea={isSupervisorArea}
-        />
-        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 relative">
-          <SimulationBanner />
-          <header className="h-16 flex items-center justify-between px-4 border-b bg-white shrink-0">
-            <SidebarTrigger />
-            <NotificationHeader />
-          </header>
-          <div className="flex-1 overflow-auto p-4 md:p-6">
-            <OnboardingModal />
-            <ComplianceAlert />
-            <PatientConsentModal />
-            <Outlet />
+      <AppSidebar
+        isAdminArea={isAdminArea}
+        isClinicArea={isClinicArea}
+        isFuncionarioArea={isFuncionarioArea}
+        isPatientArea={isPatientArea}
+        isSupervisorArea={isSupervisorArea}
+      />
+      <SidebarInset>
+        <SimulationBanner />
+        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] sticky top-0 z-10 shrink-0">
+          <SidebarTrigger />
+          <div className="font-semibold text-sm text-muted-foreground ml-auto hidden sm:block">
+            MenteClin Dashboard
+            {user && ` — ${user.nome_completo || user.name || user.email}`}
           </div>
-          <footer className="py-3 px-4 text-center text-xs text-slate-500 border-t bg-white shrink-0">
-            Seus dados são protegidos conforme a LGPD. Resolução CFP aplicável.
-          </footer>
+        </header>
+        <main className="flex-1 overflow-auto bg-slate-50/50 p-4 md:p-6 w-full h-full relative">
+          <Outlet />
         </main>
-      </div>
+      </SidebarInset>
     </SidebarProvider>
   )
 }

@@ -4,6 +4,7 @@ import pb from '@/lib/pocketbase/client'
 interface AuthContextType {
   user: any
   perfil: any
+  permissoesMenu: any[]
   isAuthenticated: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => void
@@ -18,9 +19,13 @@ export const useAuth = () => {
   return context
 }
 
+// Global cache to avoid redundant API calls across fast navigation loops
+let cachedPermissoesMenu: any[] | null = null
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<any>(pb.authStore.isValid ? pb.authStore.record : null)
   const [perfil, setPerfil] = useState<any>(null)
+  const [permissoesMenu, setPermissoesMenu] = useState<any[]>(cachedPermissoesMenu || [])
   const [isAuthenticated, setIsAuthenticated] = useState(pb.authStore.isValid)
   const [loading, setLoading] = useState(true)
 
@@ -35,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           await pb.collection('users').authRefresh()
           const currentUser = pb.authStore.record
+
           if (currentUser?.role === 'psicologo') {
             try {
               const p = await pb
@@ -44,6 +50,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             } catch (e) {
               setPerfil(null)
             }
+          }
+
+          if (currentUser?.role && !cachedPermissoesMenu) {
+            try {
+              const menus = await pb.collection('permissoes_menu').getFullList({
+                filter: `role = '${currentUser.role}' && visivel = true`,
+                sort: 'created',
+              })
+              cachedPermissoesMenu = menus
+              setPermissoesMenu(menus)
+            } catch (e) {
+              console.error(e)
+            }
+          } else if (cachedPermissoesMenu) {
+            setPermissoesMenu(cachedPermissoesMenu)
           }
         } catch (e) {
           pb.authStore.clear()
@@ -62,13 +83,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   useEffect(() => {
+    let mounted = true
     if (!loading && user?.role === 'psicologo' && !perfil) {
       pb.collection('perfis_psicologos')
         .getFirstListItem(`user_id="${user.id}"`)
-        .then(setPerfil)
-        .catch(() => setPerfil(null))
+        .then((p) => {
+          if (mounted) setPerfil(p)
+        })
+        .catch(() => {
+          if (mounted) setPerfil(null)
+        })
     }
-  }, [user, loading])
+    return () => {
+      mounted = false
+    }
+  }, [user?.id, user?.role, loading, perfil])
+
+  useEffect(() => {
+    let mounted = true
+    if (!loading && user?.role && permissoesMenu.length === 0 && !cachedPermissoesMenu) {
+      pb.collection('permissoes_menu')
+        .getFullList({
+          filter: `role = '${user.role}' && visivel = true`,
+          sort: 'created',
+        })
+        .then((res) => {
+          if (mounted) {
+            cachedPermissoesMenu = res
+            setPermissoesMenu(res)
+          }
+        })
+        .catch(console.error)
+    }
+    return () => {
+      mounted = false
+    }
+  }, [user?.role, loading, permissoesMenu.length])
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -82,11 +132,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = () => {
     localStorage.removeItem('admin_auth_simulation')
     localStorage.removeItem('sim_id')
+    cachedPermissoesMenu = null
+    setPermissoesMenu([])
     pb.authStore.clear()
   }
 
   return (
-    <AuthContext.Provider value={{ user, perfil, isAuthenticated, signIn, signOut, loading }}>
+    <AuthContext.Provider
+      value={{ user, perfil, permissoesMenu, isAuthenticated, signIn, signOut, loading }}
+    >
       {children}
     </AuthContext.Provider>
   )
