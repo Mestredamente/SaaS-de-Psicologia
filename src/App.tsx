@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider, useAuth } from '@/hooks/use-auth'
 
 import { SplashScreen } from '@/components/SplashScreen'
+import { SimulationBanner } from '@/components/SimulationBanner'
 import Maintenance from '@/pages/Maintenance'
 
 import Layout from '@/components/Layout'
@@ -90,6 +91,7 @@ const AppRoutes = () => {
       <TitleUpdater />
       <Toaster />
       <Sonner />
+      <SimulationBanner />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
