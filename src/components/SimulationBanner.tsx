@@ -47,8 +47,9 @@ export function SimulationBanner() {
       const adminAuth = JSON.parse(adminAuthStr)
       const simId = localStorage.getItem('sim_id')
 
+      // Restaura as credenciais do admin antes de chamar update()
+      // pois a collection simulacoes_admin exige @request.auth.role = 'admin'
       pb.authStore.save(adminAuth.token, adminAuth.record)
-      localStorage.removeItem('admin_auth_simulation')
 
       if (simId) {
         try {
@@ -59,9 +60,11 @@ export function SimulationBanner() {
           console.error('Failed to update simulation end time', err)
         }
       }
+
+      localStorage.removeItem('admin_auth_simulation')
       localStorage.removeItem('sim_id')
 
-      window.location.href = '/admin/visao-usuario'
+      window.location.href = '/admin'
     }
   }
 
@@ -70,18 +73,21 @@ export function SimulationBanner() {
   const role = record?.role || 'Usuário'
 
   return (
-    <div className="bg-red-600 text-white px-4 py-2 flex items-center justify-between z-[100] sticky top-0 shrink-0 shadow-md">
-      <div className="font-semibold text-sm md:text-base flex-1 truncate mr-4">
-        Modo Simulação — você está vendo como {name} ({role})
+    <>
+      <div className="h-12 w-full shrink-0" />
+      <div className="fixed top-0 left-0 w-full bg-red-600 text-white px-4 py-2 flex items-center justify-between z-[100] shadow-md h-12">
+        <div className="font-semibold text-sm md:text-base flex-1 truncate mr-4">
+          Modo Simulação — você está vendo como {name} ({role})
+        </div>
+        <Button
+          variant="destructive"
+          size="sm"
+          className="bg-red-700 hover:bg-red-800 text-white whitespace-nowrap h-8"
+          onClick={handleExit}
+        >
+          Sair da Simulação
+        </Button>
       </div>
-      <Button
-        variant="destructive"
-        size="sm"
-        className="bg-red-700 hover:bg-red-800 text-white whitespace-nowrap"
-        onClick={handleExit}
-      >
-        Sair da Simulação
-      </Button>
-    </div>
+    </>
   )
 }

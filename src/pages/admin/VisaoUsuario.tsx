@@ -93,7 +93,13 @@ export default function VisaoUsuario() {
         description: `Você agora está visualizando como ${user.nome_completo || user.email}`,
       })
 
-      window.location.href = '/dashboard'
+      let redirectUrl = '/dashboard'
+      if (user.role === 'paciente') redirectUrl = '/paciente'
+      else if (user.role === 'clinica') redirectUrl = '/clinica'
+      else if (user.role === 'funcionario') redirectUrl = '/funcionario'
+      else if (user.role === 'admin') redirectUrl = '/admin'
+
+      window.location.href = redirectUrl
     } catch (err) {
       console.error(err)
       toast({ title: 'Erro ao iniciar simulação', variant: 'destructive' })
